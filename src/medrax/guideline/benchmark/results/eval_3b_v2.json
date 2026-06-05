@@ -1,0 +1,36 @@
+{
+  "desc": "ECG-GBench v2 answer-quality, deployed 3B generates, DeepSeek judges vs gold. 2026-06-05.",
+  "model": "ecg_agent_llama3b_q4km.gguf (device)",
+  "judge": "deepseek-v4-pro",
+  "n": 112,
+  "overall": {
+    "n": 112,
+    "no_rag": {
+      "correct": 0.1875,
+      "faithful": 0.5268
+    },
+    "with_rag": {
+      "correct": 0.8036,
+      "faithful": 0.75
+    },
+    "delta": {
+      "correct": 0.6161,
+      "faithful": 0.2232
+    }
+  },
+  "by_type": {
+    "current": {
+      "n": 88,
+      "norag_correct": 0.1705,
+      "rag_correct": 0.7955
+    },
+    "temporal": {
+      "n": 24,
+      "norag_correct": 0.25,
+      "rag_correct": 0.8333
+    }
+  },
+  "rag_fixed": 75,
+  "rag_regressions": 6,
+  "caveats": "questions auto-generated (vocab overlap), gold corpus verified=false; delta is the robust signal; with-RAG 0.80 not 1.0 (small model garbles / retrieval misses); 6 regressions."
+}

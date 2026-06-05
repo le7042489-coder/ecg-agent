@@ -1,0 +1,99 @@
+{
+  "corpus_version": "egb-2026.06-cn-v0.3",
+  "language": "zh",
+  "description": "Chinese cardiology guideline corpus v0.3 (~150). AI-drafted (deepseek-v4-pro) + 2-stage AI self-check; ai_check=conflict flags DeepSeek-flagged grade/citation issues (ai_note). verified=false (clinical verification deferred post-competition). Not for clinical use/redistribution.",
+  "topics": [
+    "atrial_fibrillation",
+    "bradycardia_conduction",
+    "ventricular_arrhythmia",
+    "qt_channelopathy",
+    "ischemia_stemi",
+    "svt",
+    "electrolyte",
+    "hypertrophy_cardiomyopathy"
+  ],
+  "files": [
+    "ecg_guidelines_cn.jsonl"
+  ],
+  "record_count": 170,
+  "verified_count": 0,
+  "ai_check_conflict_count": 10,
+  "version_pairs": [
+    [
+      "af_2",
+      "af_1"
+    ],
+    [
+      "af_4",
+      "af_3"
+    ],
+    [
+      "af_6",
+      "af_5"
+    ],
+    [
+      "af_8",
+      "af_7"
+    ],
+    [
+      "af_10",
+      "af_9"
+    ],
+    [
+      "brady_23",
+      "brady_22"
+    ],
+    [
+      "va_4",
+      "va_3"
+    ],
+    [
+      "va_21",
+      "va_20"
+    ],
+    [
+      "qt_9",
+      "qt_10"
+    ],
+    [
+      "qt_12",
+      "qt_13"
+    ],
+    [
+      "stemi_2",
+      "stemi_1"
+    ],
+    [
+      "svt_14",
+      "svt_15"
+    ],
+    [
+      "svt_16",
+      "svt_17"
+    ],
+    [
+      "elyte_2",
+      "elyte_3"
+    ],
+    [
+      "hcm_10",
+      "hcm_11"
+    ],
+    [
+      "hcm_19",
+      "hcm_20"
+    ]
+  ],
+  "by_topic": {
+    "atrial_fibrillation": 25,
+    "bradycardia_conduction": 24,
+    "ventricular_arrhythmia": 22,
+    "qt_channelopathy": 17,
+    "ischemia_stemi": 28,
+    "svt": 17,
+    "electrolyte": 17,
+    "hypertrophy_cardiomyopathy": 20
+  },
+  "license_note": "AI-drafted, unverified; competition-only.",
+  "created": "2026-06-05"
+}

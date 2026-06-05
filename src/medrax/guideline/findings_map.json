@@ -1,0 +1,605 @@
+{
+  "_meta": {
+    "description": "Map from ECG classifier SCP-ECG codes (English) to Chinese guideline-retrieval terms + a coarse guideline topic. Bridges the cross-lingual gap: the classifier emits EN codes, the corpus is CN, so raw codes give zero BM25 match. CN terms drive retrieval; `topic` is metadata aligned to corpus/manifest.json topics.",
+    "owner": "code->topic + clinical mapping is human-owned; cn synonym lists may be expanded offline (DeepSeek) then curated. Never invent Class/LOE here.",
+    "conventions": "topic=null => not guideline-actionable (normal / nonspecific morphology / pacemaker already present) => contributes no query. Codes map to the 6 current corpus topics only.",
+    "known_limits": "MI-location codes (AMI/IMI/...) are often OLD/chronic MI in PTB-XL but the only ischemia_stemi corpus record is ACUTE STEMI reperfusion; acute-vs-chronic distinction is a corpus refinement (M1).",
+    "corpus_topics": [
+      "atrial_fibrillation",
+      "bradycardia_conduction",
+      "ventricular_arrhythmia",
+      "qt_channelopathy",
+      "ischemia_stemi",
+      "svt",
+      "electrolyte",
+      "hypertrophy_cardiomyopathy"
+    ],
+    "synonyms_note": "CN synonyms expanded via DeepSeek (deepseek-v4-pro) + human curation, 2026-06-05. v0.2: +室性心律失常/肥厚型心肌病 topics, remapped PVC/早搏/肥厚类 codes (2026-06-05)."
+  },
+  "map": {
+    "AFIB": {
+      "en": "atrial fibrillation",
+      "cn": [
+        "心房颤动",
+        "房颤",
+        "心房纤颤"
+      ],
+      "topic": "atrial_fibrillation"
+    },
+    "AFLT": {
+      "en": "atrial flutter",
+      "cn": [
+        "心房扑动",
+        "房扑"
+      ],
+      "topic": "atrial_fibrillation"
+    },
+    "1AVB": {
+      "en": "first degree AV block",
+      "cn": [
+        "一度房室传导阻滞",
+        "房室传导阻滞",
+        "PR间期延长",
+        "I度房室传导阻滞",
+        "房室传导延迟"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "2AVB": {
+      "en": "second degree AV block",
+      "cn": [
+        "二度房室传导阻滞",
+        "房室传导阻滞",
+        "II度房室传导阻滞",
+        "二度房室阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "3AVB": {
+      "en": "third degree AV block",
+      "cn": [
+        "三度房室传导阻滞",
+        "完全性房室传导阻滞",
+        "房室传导阻滞",
+        "起搏",
+        "III度房室传导阻滞",
+        "完全性房室阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "LPR": {
+      "en": "prolonged PR interval",
+      "cn": [
+        "PR间期延长",
+        "一度房室传导阻滞",
+        "PR延长",
+        "房室传导延迟"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "SBRAD": {
+      "en": "sinus bradycardia",
+      "cn": [
+        "窦性心动过缓",
+        "心动过缓",
+        "窦房结功能障碍",
+        "窦缓"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "CLBBB": {
+      "en": "complete left bundle branch block",
+      "cn": [
+        "完全性左束支传导阻滞",
+        "左束支传导阻滞",
+        "传导阻滞",
+        "完全性左束支阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "CRBBB": {
+      "en": "complete right bundle branch block",
+      "cn": [
+        "完全性右束支传导阻滞",
+        "右束支传导阻滞",
+        "传导阻滞",
+        "完全性右束支阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "ILBBB": {
+      "en": "incomplete left bundle branch block",
+      "cn": [
+        "不完全性左束支传导阻滞",
+        "左束支传导阻滞",
+        "不完全左束支阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "IRBBB": {
+      "en": "incomplete right bundle branch block",
+      "cn": [
+        "不完全性右束支传导阻滞",
+        "右束支传导阻滞",
+        "不完全右束支阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "LAFB": {
+      "en": "left anterior fascicular block",
+      "cn": [
+        "左前分支传导阻滞",
+        "分支传导阻滞",
+        "左前分支阻滞",
+        "左前半阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "LPFB": {
+      "en": "left posterior fascicular block",
+      "cn": [
+        "左后分支传导阻滞",
+        "分支传导阻滞",
+        "左后分支阻滞",
+        "左后半阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "IVCD": {
+      "en": "intraventricular conduction disturbance",
+      "cn": [
+        "室内传导阻滞",
+        "传导阻滞",
+        "室内阻滞",
+        "心室内传导阻滞"
+      ],
+      "topic": "bradycardia_conduction"
+    },
+    "LNGQT": {
+      "en": "long QT-interval",
+      "cn": [
+        "QT间期延长",
+        "长QT综合征",
+        "QT延长",
+        "长QT间期",
+        "QT时间延长"
+      ],
+      "topic": "qt_channelopathy"
+    },
+    "STE_": {
+      "en": "ST elevation",
+      "cn": [
+        "ST段抬高",
+        "STEMI",
+        "再灌注",
+        "心肌梗死",
+        "ST段上抬",
+        "ST抬高"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "STD_": {
+      "en": "ST depression",
+      "cn": [
+        "ST段压低",
+        "心肌缺血",
+        "ST段下移",
+        "ST降低"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "AMI": {
+      "en": "anterior MI",
+      "cn": [
+        "前壁心肌梗死",
+        "心肌梗死",
+        "前壁心梗",
+        "前壁梗塞"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ASMI": {
+      "en": "anteroseptal MI",
+      "cn": [
+        "前间壁心肌梗死",
+        "心肌梗死",
+        "前间壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ALMI": {
+      "en": "anterolateral MI",
+      "cn": [
+        "前侧壁心肌梗死",
+        "心肌梗死",
+        "前侧壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ILMI": {
+      "en": "inferolateral MI",
+      "cn": [
+        "下侧壁心肌梗死",
+        "心肌梗死",
+        "下侧壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "IMI": {
+      "en": "inferior MI",
+      "cn": [
+        "下壁心肌梗死",
+        "心肌梗死",
+        "下壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "LMI": {
+      "en": "lateral MI",
+      "cn": [
+        "侧壁心肌梗死",
+        "心肌梗死",
+        "侧壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "PMI": {
+      "en": "posterior MI",
+      "cn": [
+        "后壁心肌梗死",
+        "心肌梗死",
+        "后壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "IPMI": {
+      "en": "inferoposterior MI",
+      "cn": [
+        "下后壁心肌梗死",
+        "心肌梗死",
+        "下后壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "IPLMI": {
+      "en": "inferoposterolateral MI",
+      "cn": [
+        "下后侧壁心肌梗死",
+        "心肌梗死",
+        "下后侧壁心梗"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ANEUR": {
+      "en": "ventricular aneurysm ST-T",
+      "cn": [
+        "室壁瘤",
+        "心肌梗死",
+        "心室壁瘤"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "QWAVE": {
+      "en": "Q waves present",
+      "cn": [
+        "病理性Q波",
+        "心肌梗死",
+        "异常Q波"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISC_": {
+      "en": "non-specific ischemic",
+      "cn": [
+        "心肌缺血",
+        "非特异性心肌缺血",
+        "供血不足"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISCAL": {
+      "en": "ischemic anterolateral",
+      "cn": [
+        "前侧壁心肌缺血",
+        "心肌缺血",
+        "前侧壁缺血"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISCAN": {
+      "en": "ischemic anterior",
+      "cn": [
+        "前壁心肌缺血",
+        "心肌缺血",
+        "前壁缺血"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISCAS": {
+      "en": "ischemic anteroseptal",
+      "cn": [
+        "前间壁心肌缺血",
+        "心肌缺血",
+        "前间壁缺血"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISCIL": {
+      "en": "ischemic inferolateral",
+      "cn": [
+        "下侧壁心肌缺血",
+        "心肌缺血",
+        "下侧壁缺血"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISCIN": {
+      "en": "ischemic inferior",
+      "cn": [
+        "下壁心肌缺血",
+        "心肌缺血",
+        "下壁缺血"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "ISCLA": {
+      "en": "ischemic lateral",
+      "cn": [
+        "侧壁心肌缺血",
+        "心肌缺血",
+        "侧壁缺血"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "INJAL": {
+      "en": "subendocardial injury anterolateral",
+      "cn": [
+        "前侧壁心内膜下损伤",
+        "心肌损伤",
+        "心肌缺血",
+        "前侧壁心内膜损伤"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "INJAS": {
+      "en": "subendocardial injury anteroseptal",
+      "cn": [
+        "前间壁心内膜下损伤",
+        "心肌损伤",
+        "前间壁心内膜损伤"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "INJIL": {
+      "en": "subendocardial injury inferolateral",
+      "cn": [
+        "下侧壁心内膜下损伤",
+        "心肌损伤",
+        "下侧壁心内膜损伤"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "INJIN": {
+      "en": "subendocardial injury inferior",
+      "cn": [
+        "下壁心内膜下损伤",
+        "心肌损伤",
+        "下壁心内膜损伤"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "INJLA": {
+      "en": "subendocardial injury lateral",
+      "cn": [
+        "侧壁心内膜下损伤",
+        "心肌损伤",
+        "侧壁心内膜损伤"
+      ],
+      "topic": "ischemia_stemi"
+    },
+    "PSVT": {
+      "en": "paroxysmal SVT",
+      "cn": [
+        "阵发性室上性心动过速",
+        "室上性心动过速",
+        "室上速",
+        "阵发性室上速"
+      ],
+      "topic": "svt"
+    },
+    "SVTAC": {
+      "en": "supraventricular tachycardia",
+      "cn": [
+        "室上性心动过速",
+        "室上速"
+      ],
+      "topic": "svt"
+    },
+    "SVARR": {
+      "en": "supraventricular arrhythmia",
+      "cn": [
+        "室上性心律失常",
+        "室上性",
+        "室上性心律不齐"
+      ],
+      "topic": "svt"
+    },
+    "WPW": {
+      "en": "Wolff-Parkinson-White",
+      "cn": [
+        "预激综合征",
+        "房室折返性心动过速",
+        "预激"
+      ],
+      "topic": "svt"
+    },
+    "EL": {
+      "en": "electrolyte disturbance or drug",
+      "cn": [
+        "电解质紊乱",
+        "高钾血症",
+        "低钾血症",
+        "电解质异常"
+      ],
+      "topic": "electrolyte"
+    },
+    "DIG": {
+      "en": "digitalis effect",
+      "cn": [
+        "洋地黄效应",
+        "洋地黄中毒",
+        "洋地黄作用",
+        "地高辛效应"
+      ],
+      "topic": "electrolyte"
+    },
+    "NORM": {
+      "en": "normal ECG",
+      "cn": [],
+      "topic": null
+    },
+    "SR": {
+      "en": "sinus rhythm",
+      "cn": [],
+      "topic": null
+    },
+    "PACE": {
+      "en": "pacemaker already present (not a pacing indication)",
+      "cn": [],
+      "topic": null
+    },
+    "STACH": {
+      "en": "sinus tachycardia",
+      "cn": [],
+      "topic": null
+    },
+    "SARRH": {
+      "en": "sinus arrhythmia",
+      "cn": [],
+      "topic": null
+    },
+    "PAC": {
+      "en": "atrial premature complex",
+      "cn": [],
+      "topic": null
+    },
+    "PVC": {
+      "en": "ventricular premature complex",
+      "cn": [
+        "室性早搏",
+        "室早",
+        "室性期前收缩"
+      ],
+      "topic": "ventricular_arrhythmia"
+    },
+    "PRC(S)": {
+      "en": "premature complex(es)",
+      "cn": [
+        "早搏",
+        "期前收缩"
+      ],
+      "topic": "ventricular_arrhythmia"
+    },
+    "BIGU": {
+      "en": "bigeminy",
+      "cn": [
+        "二联律",
+        "室性早搏"
+      ],
+      "topic": "ventricular_arrhythmia"
+    },
+    "TRIGU": {
+      "en": "trigeminy",
+      "cn": [
+        "三联律",
+        "室性早搏"
+      ],
+      "topic": "ventricular_arrhythmia"
+    },
+    "LVH": {
+      "en": "left ventricular hypertrophy",
+      "cn": [
+        "左心室肥厚",
+        "左室肥厚",
+        "心肌肥厚"
+      ],
+      "topic": "hypertrophy_cardiomyopathy"
+    },
+    "RVH": {
+      "en": "right ventricular hypertrophy",
+      "cn": [],
+      "topic": null
+    },
+    "VCLVH": {
+      "en": "voltage criteria for LVH",
+      "cn": [
+        "左室高电压",
+        "左心室肥厚"
+      ],
+      "topic": "hypertrophy_cardiomyopathy"
+    },
+    "SEHYP": {
+      "en": "septal hypertrophy",
+      "cn": [
+        "室间隔肥厚",
+        "肥厚型心肌病"
+      ],
+      "topic": "hypertrophy_cardiomyopathy"
+    },
+    "LAO/LAE": {
+      "en": "left atrial overload/enlargement",
+      "cn": [],
+      "topic": null
+    },
+    "RAO/RAE": {
+      "en": "right atrial overload/enlargement",
+      "cn": [],
+      "topic": null
+    },
+    "HVOLT": {
+      "en": "high QRS voltage",
+      "cn": [],
+      "topic": null
+    },
+    "LVOLT": {
+      "en": "low QRS voltage",
+      "cn": [],
+      "topic": null
+    },
+    "LOWT": {
+      "en": "low amplitude T-waves",
+      "cn": [],
+      "topic": null
+    },
+    "INVT": {
+      "en": "inverted T-waves",
+      "cn": [],
+      "topic": null
+    },
+    "NDT": {
+      "en": "non-diagnostic T abnormalities",
+      "cn": [],
+      "topic": null
+    },
+    "NST_": {
+      "en": "non-specific ST changes",
+      "cn": [],
+      "topic": null
+    },
+    "NT_": {
+      "en": "non-specific T-wave changes",
+      "cn": [],
+      "topic": null
+    },
+    "TAB_": {
+      "en": "T-wave abnormality",
+      "cn": [],
+      "topic": null
+    },
+    "ABQRS": {
+      "en": "abnormal QRS",
+      "cn": [],
+      "topic": null
+    }
+  }
+}

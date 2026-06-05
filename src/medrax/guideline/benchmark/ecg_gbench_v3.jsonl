@@ -1,0 +1,306 @@
+{"id": "af_3__1", "question": "我是非瓣膜性房颤患者，需要抗凝预防中风，现在医生都优先推荐什么类型的药？", "gold_ids": ["af_3"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_4"]}
+{"id": "af_3__2", "question": "对于适合抗凝的非瓣膜性房颤病人，预防卒中时新型口服抗凝药和华法林哪个更优先考虑？", "gold_ids": ["af_3"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_4"]}
+{"id": "af_5__1", "question": "我出血风险评分挺高的，是不是就不能吃抗凝药了，医生一般会怎么处理？", "gold_ids": ["af_5"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_6"]}
+{"id": "af_5__2", "question": "房颤患者在抗凝前做HAS-BLED评分发现高危出血，这时候应该如何正确对待？", "gold_ids": ["af_5"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_6"]}
+{"id": "af_7__1", "question": "我房颤没啥症状，心脏功能也正常，心跳控制在多少次以下就可以先不用太严格？", "gold_ids": ["af_7"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_8"]}
+{"id": "af_7__2", "question": "对于无症状、左室功能正常的房颤患者，起始控制静息心率的目标可以放宽到多少？", "gold_ids": ["af_7"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_8"]}
+{"id": "af_9__1", "question": "房颤发作心跳快，首选哪些口服药来减慢心率，选择时主要看什么？", "gold_ids": ["af_9"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_10"]}
+{"id": "af_9__2", "question": "医生给我控制房颤心室率，说一线药物有两类，具体是根据什么来个体化挑选的？", "gold_ids": ["af_9"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_10"]}
+{"id": "af_11__1", "question": "我时不时会犯房颤，症状明显，想根治的话现在能直接做什么微创手术？", "gold_ids": ["af_11"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_11__2", "question": "症状性阵发性房颤患者不想长期吃药，指南里一线节律控制策略可以选什么？", "gold_ids": ["af_11"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_12__1", "question": "我房颤持续了半年，还有心衰，做消融除了减轻症状，对我长期结局有帮助吗？", "gold_ids": ["af_12"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_12__2", "question": "导管消融对哪些类型的持续性房颤患者不仅能改善症状，还可能改善预后？", "gold_ids": ["af_12"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_13__1", "question": "我房颤总是心慌难受，医生开了调节心率的药，主要目的是什么？", "gold_ids": ["af_13"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_13__2", "question": "为了缓解症状性房颤带来的不适，使用胺碘酮或普罗帕酮这些药物是出于什么治疗考虑？", "gold_ids": ["af_13"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_14__1", "question": "我刚发作房颤不到48小时，以前也没有中风史，复律前还需要先吃抗凝药吗？", "gold_ids": ["af_14"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_14__2", "question": "房颤发作时间短，而且没有血栓高危因素，能不能直接做电复律？", "gold_ids": ["af_14"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_15__1", "question": "我房颤都不知道多久了，现在想复律，安全起见得怎么准备才能避免中风？", "gold_ids": ["af_15"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_15__2", "question": "房颤时间超过两天或发病时间不清楚，在复律前必须做好哪项抗凝检查或准备？", "gold_ids": ["af_15"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_16__1", "question": "电复律成功后，抗凝药还要继续吃吗，要吃多久才能决定停不停？", "gold_ids": ["af_16"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_16__2", "question": "房颤复律后，所有病人至少需要继续抗凝多长时间，之后根据什么判断长期方案？", "gold_ids": ["af_16"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_17__1", "question": "我查出的是心房扑动，不是房颤，中风风险和抗凝的决策和房颤一样吗？", "gold_ids": ["af_17"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_17__2", "question": "心房扑动患者评估要不要吃抗凝药，也是用CHA2DS2-VASc评分来定吗？", "gold_ids": ["af_17"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_18__1", "question": "典型的房扑想根治，导管消融和药物比哪个更好，成功率高吗？", "gold_ids": ["af_18"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_18__2", "question": "对于典型心房扑动，首选治疗是做哪个部位的消融，能不能彻底解决问题？", "gold_ids": ["af_18"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_19__1", "question": "我有风湿性心脏病，二尖瓣狭窄比较重，为什么医生说我不能用新型抗凝药？", "gold_ids": ["af_19"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_19__2", "question": "合并中重度二尖瓣狭窄或换了机械瓣的房颤患者，抗凝只能选哪种药？", "gold_ids": ["af_19"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_20__1", "question": "我中风风险高，但长期吃抗凝药总是出血，有没有不用药也能预防血栓的办法？", "gold_ids": ["af_20"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_20__2", "question": "对于不能长期耐受口服抗凝的非瓣膜性房颤患者，有创介入治疗可以考虑什么手术？", "gold_ids": ["af_20"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_21__1", "question": "房颤导致血压都维持不住了，紧急减慢心率可以静脉推什么药？", "gold_ids": ["af_21"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_21__2", "question": "房颤病人血流动力学不稳定的时候静脉控制心率用什么药，稳定后又该怎么选药？", "gold_ids": ["af_21"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_22__1", "question": "我刚确诊房颤不到一年，还有心血管老毛病，早点把心跳节律控制住有什么好处？", "gold_ids": ["af_22"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_22__2", "question": "合并心血管病的房颤患者，确诊后第一年内采取积极的节律治疗能降低什么风险？", "gold_ids": ["af_22"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_23__1", "question": "房颤患者做完心脏支架后，抗凝和抗血小板药该怎么搭配，主要顾虑什么？", "gold_ids": ["af_23"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_23__2", "question": "房颤合并急性冠脉综合征或放了支架，制定抗栓方案需要在哪两方面做平衡？", "gold_ids": ["af_23"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_24__1", "question": "我今年67了，身体没不舒服，但社区医生说应该查查有没有房颤，是做什么检查？", "gold_ids": ["af_24"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_24__2", "question": "65岁以上的老年人，没有症状怎么筛查房颤，最简单的做法是什么？", "gold_ids": ["af_24"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_25__1", "question": "除了吃药和手术，房颤病人平时还应该注意哪些方面来减少发作、改善预后？", "gold_ids": ["af_25"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_25__2", "question": "房颤的综合管理除了抗凝和节律控制，还包括减重、控制血压和治疗打呼噜吗？", "gold_ids": ["af_25"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "brady_1__1", "question": "医生，我心跳特别慢，还经常头晕乏力，检查说是病态窦房结综合征引起的，需要装起搏器吗？", "gold_ids": ["brady_1"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_1__2", "question": "对于明确由病态窦房结综合征导致的有症状严重窦缓和窦性停搏，该怎么处理？", "gold_ids": ["brady_1"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_2__1", "question": "我稍微活动一下就喘不上气，心率也上不去，大夫说我是变时功能不全，该选哪种起搏器？", "gold_ids": ["brady_2"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_2__2", "question": "症状性变时功能不全的患者，应该植入什么类型的永久起搏器？", "gold_ids": ["brady_2"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_3__1", "question": "我体检发现心率慢，但一点感觉都没有，医生说可能是药物影响的，需要安起搏器吗？", "gold_ids": ["brady_3"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_3__2", "question": "对于无症状或由药物引起的可逆性心动过缓，是否建议植入永久起搏器？", "gold_ids": ["brady_3"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_4__1", "question": "我爸突然晕倒过几次，查出三度房室传导阻滞，而且最近心力衰竭了，是不是必须手术装起搏器？", "gold_ids": ["brady_4"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_4__2", "question": "三度或高度房室传导阻滞伴有晕厥、心衰或逸搏心率过慢相关症状时，该植入永久起搏器吗？", "gold_ids": ["brady_4"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_5__1", "question": "我清醒的时候心律很慢但并不觉得难受，心电图说是三度阻滞，大夫说可以先放个起搏器，这样行吗？", "gold_ids": ["brady_5"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_5__2", "question": "对于清醒时逸搏心率不低于40次/分且无症状的三度或高度房室传导阻滞，能考虑植入永久起搏器吗？", "gold_ids": ["brady_5"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_6__1", "question": "查出二度II型房室传导阻滞，但平时没觉得有什么不对劲，医生还是建议我装起搏器，有这个必要吗？", "gold_ids": ["brady_6"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_6__2", "question": "二度II型房室传导阻滞，无论有没有症状，都应植入永久起搏器吗？", "gold_ids": ["brady_6"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_7__1", "question": "我一跑步就觉得心慌气短，做运动心电图抓到过二度或三度阻滞，是否需要安装起搏器？", "gold_ids": ["brady_7"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_7__2", "question": "对于运动诱发的二度或三度房室传导阻滞，哪怕没有症状，也应该植入永久起搏器吗？", "gold_ids": ["brady_7"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_8__1", "question": "我有强直性肌营养不良，最近心电图发现有二度阻滞，没有不舒服，医生让我装起搏器对不对？", "gold_ids": ["brady_8"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_8__2", "question": "神经肌肉疾病患者如强直性肌营养不良，合并二度或三度房室传导阻滞，不问症状，是否必须植入永久起搏器？", "gold_ids": ["brady_8"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_9__1", "question": "我的一度房室传导阻滞，PR间期超过300毫秒，心脏功能也不好，感觉像心脏跳动不协调，能装生理性起搏器吗？", "gold_ids": ["brady_9"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_9__2", "question": "一度房室传导阻滞PR间期＞300 ms且伴有左心功能不全或房室失同步症状，能否考虑双腔起搏或心脏再同步化治疗？", "gold_ids": ["brady_9"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_10__1", "question": "一体检就查出PR间期延长，但我完全没感觉，大夫说不安起搏器也行，是这样吗？", "gold_ids": ["brady_10"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_10__2", "question": "单纯无症状的一度房室传导阻滞，需要植入永久起搏器吗？", "gold_ids": ["brady_10"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_11__1", "question": "我之前诊断双束支阻滞，最近动态心电图抓到阵发性的完全性房室传导阻滞，是不是该装永久起搏器了？", "gold_ids": ["brady_11"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_11__2", "question": "双分支或双束支阻滞患者如果出现了间歇性三度房室传导阻滞，应该植入永久起搏器吗？", "gold_ids": ["brady_11"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_12__1", "question": "做心电图发现双分支阻滞，又有一段二度II型房室传导阻滞，主任建议尽快装起搏器，这个指征对吗？", "gold_ids": ["brady_12"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_12__2", "question": "双分支/双束支阻滞合并二度II型房室传导阻滞，是否推荐植入永久起搏器？", "gold_ids": ["brady_12"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_13__1", "question": "我的心电图一会是左束支阻滞，一会又变成右束支阻滞，医生说这是装起搏器的强指征，为什么？", "gold_ids": ["brady_13"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_13__2", "question": "交替出现左束支和右束支阻滞，是否属于永久起搏的I类适应证？", "gold_ids": ["brady_13"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_14__1", "question": "我有双束支阻滞，查不出原因的晕厥，电生理检查H-V间期≥100毫秒，这样该装起搏器吗？", "gold_ids": ["brady_14"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_14__2", "question": "双束支阻滞伴不明原因晕厥，电生理检查发现H-V间期≥100 ms或能诱发三度阻滞，可以考虑植入永久起搏器吗？", "gold_ids": ["brady_14"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_15__1", "question": "我只有左束支阻滞，没查出房室传导阻滞，也没什么不舒服，听说不需要装起搏器，对吗？", "gold_ids": ["brady_15"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_15__2", "question": "对于无症状的双束支阻滞或孤立左束支阻滞且无房室传导阻滞证据的患者，是否推荐植入永久起搏器？", "gold_ids": ["brady_15"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_16__1", "question": "我心衰很重，射血分数只有30%，因为心跳太慢要装起搏器，以后可能大部分时间依赖起搏，是不是直接装三腔更好？", "gold_ids": ["brady_16"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_16__2", "question": "LVEF≤35%的慢性心衰患者因心动过缓需起搏且预计高比例心室起搏，能否直接植入CRT？", "gold_ids": ["brady_16"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_17__1", "question": "我确诊心衰，窦性心律，完全性左束支阻滞，QRS波150毫秒，射血分数30%，药吃了症状还在，医生让我做心脏再同步化治疗，有必要吗？", "gold_ids": ["brady_17"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_17__2", "question": "对于满足窦性心律、LBBB、QRS≥150 ms、LVEF≤35%，且优化药物治疗后仍有症状的慢性心衰患者，是否推荐CRT？", "gold_ids": ["brady_17"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_18__1", "question": "我心衰，有左束支阻滞，QRS波处在130到149毫秒之间，射血分数只有28%，药也用了，还是气短，该不该做再同步化起搏？", "gold_ids": ["brady_18"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_18__2", "question": "窦性心律、LBBB、QRS持续时间130～149 ms、LVEF≤35%且优化药物治疗后症状仍存的慢性心衰患者，适合植入CRT吗？", "gold_ids": ["brady_18"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_19__1", "question": "我不是左束支阻滞，但QRS波大于150毫秒，射血分数很低，药物控制下仍感到心衰症状，能尝试装三腔起搏器吗？", "gold_ids": ["brady_19"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_19__2", "question": "非LBBB但QRS≥150 ms、LVEF≤35%且优化药物治疗后依然有症状的慢性心衰患者，可以考虑CRT吗？", "gold_ids": ["brady_19"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_20__1", "question": "我心脏传导不是左束支阻滞形态，但QRS有130到149毫秒宽，射血分数不到35%，用药后还是反复心衰，装CRT有用吗？", "gold_ids": ["brady_20"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_20__2", "question": "对于非LBBB、QRS在130～149 ms、LVEF≤35%且优化药物治疗后仍有症状的慢性心衰患者，是否也可以考虑CRT？", "gold_ids": ["brady_20"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_21__1", "question": "我持续房颤，心功能很差，射血分数30%，药物控制不好心跳，医生计划做房室结消融后让我完全依赖起搏，是否该直接选再同步化起搏器？", "gold_ids": ["brady_21"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_21__2", "question": "持续性心房颤动、LVEF≤35%、心衰症状明显，且药物控制心室率不佳或拟行房室结消融致起搏依赖的患者，能否植入CRT？", "gold_ids": ["brady_21"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_22__1", "question": "我心衰，但心电图QRS宽度不到120毫秒，医生说不做常规心脏再同步化治疗，这个决定对吗？", "gold_ids": ["brady_22"], "topic": "bradycardia_conduction", "type": "temporal", "stale_ids": ["brady_23"]}
+{"id": "brady_22__2", "question": "QRS持续时间＜120 ms的慢性心衰患者，是否推荐常规应用CRT？", "gold_ids": ["brady_22"], "topic": "bradycardia_conduction", "type": "temporal", "stale_ids": ["brady_23"]}
+{"id": "brady_24__1", "question": "我原来装的普通起搏器，现在频繁右心室起搏，心功能越来越差，射血分数降到35%以下，能不能升级成三腔起搏器？", "gold_ids": ["brady_24"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "brady_24__2", "question": "已植入传统起搏器或ICD的患者，因高比例右心室起搏导致心衰恶化且LVEF≤35%，是否可以考虑升级为CRT？", "gold_ids": ["brady_24"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "va_1__1", "question": "医生，我有室性早搏，总是心慌，可以先用什么药控制一下？", "gold_ids": ["va_1"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_1__2", "question": "对阵发性有症状的室性早搏，初始治疗药物该如何选择？", "gold_ids": ["va_1"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_2__1", "question": "24小时动态心电图抓到很多室早，医生说超过一万次了，接下来要重点查什么？", "gold_ids": ["va_2"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_2__2", "question": "当室性早搏负荷大于10,000次/24小时时，是否应进一步评估心脏结构和动态心电图？", "gold_ids": ["va_2"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_3__1", "question": "我频发室早症状很明显，药吃了效果也不好，还有其他根治办法吗？", "gold_ids": ["va_3"], "topic": "ventricular_arrhythmia", "type": "temporal", "stale_ids": ["va_4"]}
+{"id": "va_3__2", "question": "对于症状性频发室早且药物治疗失败的患者，应优先考虑何种介入手段？", "gold_ids": ["va_3"], "topic": "ventricular_arrhythmia", "type": "temporal", "stale_ids": ["va_4"]}
+{"id": "va_5__1", "question": "做了彩超发现心功能差，24小时室早负荷又很高，别的病都没查出来，导管消融对我心功能有帮助吗？", "gold_ids": ["va_5"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_5__2", "question": "对于频发室早合并左心室收缩功能下降且无其他病因时，导管消融的推荐依据是什么？", "gold_ids": ["va_5"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_6__1", "question": "体检报告写非持续性室速，目前没症状，但需要排查哪些潜在问题？", "gold_ids": ["va_6"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_6__2", "question": "面对非持续性室性心动过速，临床处理的核心理念是什么？", "gold_ids": ["va_6"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_7__1", "question": "心肌梗死后心功能差，动态心电图查到短阵室速，电生理检查会诱发室速，这种情况装除颤器是一类适应证吗？", "gold_ids": ["va_7"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_7__2", "question": "心梗后LVEF≤30%伴非持续室速，若电生理检查可诱出持续室速，应如何考虑一级预防？", "gold_ids": ["va_7"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_8__1", "question": "持续单形性室速发作，病人血压都测不到了，首选的急救措施是什么？", "gold_ids": ["va_8"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_8__2", "question": "对血流动力学不稳定的持续性单形性室速，应紧急采用哪种复律方式？", "gold_ids": ["va_8"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_9__1", "question": "稳定的持续单形室速，没有出现意识不清，先用哪种药转律比较安全？", "gold_ids": ["va_9"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_9__2", "question": "对血流动力学尚稳定的持续单形室速患者，药物复律首选哪两类静脉制剂？", "gold_ids": ["va_9"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_10__1", "question": "心梗急性期出现持续性单形性室速，和缺血明显相关时，利多卡因静脉推注合适吗？", "gold_ids": ["va_10"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_10__2", "question": "对于急性心肌缺血背景下的持续单形室速，可采取哪种针对性药物处理？", "gold_ids": ["va_10"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_11__1", "question": "QT间期正常，突然发生多形性室速，应该紧急想到什么病因并马上采取哪两项治疗？", "gold_ids": ["va_11"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_11__2", "question": "普通QT宽的急性多形室速，首要评估什么并用什么药加/或电复律？", "gold_ids": ["va_11"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_12__1", "question": "吃了药之后发生尖端扭转型室性心动过速，抢救时要立即停用可疑药物，还要静脉补什么电解质和药物？", "gold_ids": ["va_12"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_12__2", "question": "针对尖端扭转室速，停用延长QT药物并纠正低钾后，下一步特异性治疗包括哪些？", "gold_ids": ["va_12"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_13__1", "question": "心梗后做了支架三个月，心脏彩超显示左心室射血分数还有35%，心功能II级，为预防猝死需要装ICD吗？", "gold_ids": ["va_13"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_13__2", "question": "心肌梗死后40天以上，经最佳药物治疗LVEF仍≤35%，心功能Ⅱ-Ⅲ级，一级预防植入ICD的指征是什么？", "gold_ids": ["va_13"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_14__1", "question": "我心脏扩大，不是冠心病，现在射血分数只有30%，走几步就喘，医生建议考虑体内除颤器，这个理由是什么？", "gold_ids": ["va_14"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_14__2", "question": "非缺血性心肌病患者在优化药物治疗后LVEF仍≤35%且心功II-III级，应如何评价一级预防策略？", "gold_ids": ["va_14"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_15__1", "question": "如果一个人发生过心脏骤停被救活，或者因持续室速晕厥过，查不到可逆转原因，后面要怎么预防？", "gold_ids": ["va_15"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_15__2", "question": "发生过血流动力学恶化的室速或心脏骤停的幸存者，在排除可逆因素后，二级预防措施首选什么？", "gold_ids": ["va_15"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_16__1", "question": "查出右室流出道起源的室速，症状明显，吃药效果不理想，能做消融根治吗？", "gold_ids": ["va_16"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_16__2", "question": "对于药物难治或有症状且患者希望根治的右室流出道特发性室速，导管消融的地位如何？", "gold_ids": ["va_16"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_17__1", "question": "我被诊断为左后分支型室速，医生试了吃药有效但不想长期吃，可以直接做消融吗？", "gold_ids": ["va_17"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_17__2", "question": "维拉帕米敏感的左后分支型特发室速，介入治疗是否是强烈推荐的选择？", "gold_ids": ["va_17"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_18__1", "question": "电风暴发作时，室速反复来，除颤充了好几次，药方面首选什么联合方案？", "gold_ids": ["va_18"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_18__2", "question": "控制电风暴急性发作期间的反复室性心律失常，静脉用药联合方案的核心是什么？", "gold_ids": ["va_18"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_19__1", "question": "电风暴发作的时候，病人烦躁不安不断被电，除了用药，是不是需要镇静或者上呼吸机来稳定？", "gold_ids": ["va_19"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_19__2", "question": "面对电风暴患者，除了药物外，何种措施有助于直接降低交感神经过度激活？", "gold_ids": ["va_19"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_20__1", "question": "电风暴时ICD反复放电，胺碘酮等药都压不住，能急诊做消融来挽救生命吗？", "gold_ids": ["va_20"], "topic": "ventricular_arrhythmia", "type": "temporal", "stale_ids": ["va_21"]}
+{"id": "va_20__2", "question": "对于药物难控且反复ICD电击的电风暴，应如何考虑急诊介入策略？", "gold_ids": ["va_20"], "topic": "ventricular_arrhythmia", "type": "temporal", "stale_ids": ["va_21"]}
+{"id": "va_22__1", "question": "得过心梗或者有心衰，射血分数才40，医生让我长期吃洛尔类药，主要是为了防什么？", "gold_ids": ["va_22"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "va_22__2", "question": "心梗后或心衰（LVEF≤40%）患者长期应用β受体阻滞剂，其主要目标之一是降低何种风险？", "gold_ids": ["va_22"], "topic": "ventricular_arrhythmia", "type": "current"}
+{"id": "qt_1__1", "question": "医生，我爸吃降压药后查出QT间期变长了，现在该怎么办？", "gold_ids": ["qt_1"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_1__2", "question": "对于刚确诊的药物性长QT，处理上除了停药还要重点关注哪方面纠正？", "gold_ids": ["qt_1"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_2__1", "question": "病人吃抗心律失常药后QTc都超过500了，血镁查出来是正常的，还需要推硫酸镁吗？", "gold_ids": ["qt_2"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_2__2", "question": "药物引起的QTc显著延长甚至发生扭转室速，急性处理的首选药物是什么？", "gold_ids": ["qt_2"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_3__1", "question": "孩子确诊先天性长QT，医生建议长期吃β阻滞剂，具体用哪个药效果更好呢？", "gold_ids": ["qt_3"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_3__2", "question": "确诊LQTS后如果没有禁忌，一线长期治疗推荐哪类药物？", "gold_ids": ["qt_3"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_4__1", "question": "我吃最大剂量的倍他乐克还是昏倒过，除了放ICD还有什么手术选择吗？", "gold_ids": ["qt_4"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_4__2", "question": "对β阻滞剂不耐受或效果不佳的LQTS患者，可以考虑哪种去神经手术？", "gold_ids": ["qt_4"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_5__1", "question": "心脏骤停被救回来的长QT病人，出院后最关键的防猝死措施是什么？", "gold_ids": ["qt_5"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_5__2", "question": "LQTS患者中哪些情况应该积极建议装体内除颤仪？", "gold_ids": ["qt_5"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_6__1", "question": "我弟弟心电图是1型Brugada波，还晕厥过一次，医生说必须装ICD，为什么？", "gold_ids": ["qt_6"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_6__2", "question": "有自发1型心电图且伴心源性晕厥的Brugada综合征，首选什么治疗？", "gold_ids": ["qt_6"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_7__1", "question": "只有做药物激发才出现Brugada波、平时没任何不舒服的人，需要装ICD吗？", "gold_ids": ["qt_7"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_7__2", "question": "对仅由药物诱发出1型心电图的Brugada无症状者，是否推荐植入除颤器？", "gold_ids": ["qt_7"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_8__1", "question": "确诊Brugada后我晕倒过两次，但坚决不想装ICD，还有其他药能长期用吗？", "gold_ids": ["qt_8"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_8__2", "question": "有症状又不适合装ICD的Brugada患者，可以考虑哪种口服药物来替代？", "gold_ids": ["qt_8"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_10__1", "question": "没有任何症状的Brugada，需要做电生理检查来评估风险吗？", "gold_ids": ["qt_10"], "topic": "qt_channelopathy", "type": "temporal", "stale_ids": ["qt_9"]}
+{"id": "qt_10__2", "question": "对无症状的Brugada综合征患者，常规用心脏电生理检查做危险分层合适吗？", "gold_ids": ["qt_10"], "topic": "qt_channelopathy", "type": "temporal", "stale_ids": ["qt_9"]}
+{"id": "qt_11__1", "question": "孩子确诊CPVT，担心药物副作用，但医生说必须长期吃一种药，首选哪个？", "gold_ids": ["qt_11"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_11__2", "question": "儿茶酚胺敏感性多形性室速确诊后，一线药物治疗的推荐是什么？", "gold_ids": ["qt_11"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_13__1", "question": "CPVT病人吃足了β阻滞剂还是反复晕倒，除了换药还能加什么药？", "gold_ids": ["qt_13"], "topic": "qt_channelopathy", "type": "temporal", "stale_ids": ["qt_12"]}
+{"id": "qt_13__2", "question": "在足量β受体阻滞剂基础上仍出现室速或晕厥的CPVT患者，应考虑联用哪类药物？", "gold_ids": ["qt_13"], "topic": "qt_channelopathy", "type": "temporal", "stale_ids": ["qt_12"]}
+{"id": "qt_14__1", "question": "CPVT患者如果已经发生过心脏骤停，二级预防最可靠的手段是什么？", "gold_ids": ["qt_14"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_14__2", "question": "对于经历过心脏骤停的儿茶酚胺敏感性多形性室速幸存者，推荐哪种植入装置？", "gold_ids": ["qt_14"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_15__1", "question": "监护室病人突然出现尖端扭转室速，血镁结果还没出来，可以马上推点硫酸镁吗？", "gold_ids": ["qt_15"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_15__2", "question": "TdP急性发作时，不管血镁高低，首要的静脉用药是什么？", "gold_ids": ["qt_15"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_16__1", "question": "心率慢诱发的扭转室速，除了补镁补钾，还有什么紧急处理能快速终止发作？", "gold_ids": ["qt_16"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_16__2", "question": "对于间歇依赖性TdP，临时起搏的心率目标通常要调到多少？", "gold_ids": ["qt_16"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_17__1", "question": "扭转室速纠正后，为了防止再发，血钾要维持在什么水平才安全？", "gold_ids": ["qt_17"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "qt_17__2", "question": "TdP高危患者补钾时，医生总说钾要达到4.0以上，这是为了什么？", "gold_ids": ["qt_17"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "stemi_1__1", "question": "我爸心梗发作已经快20个小时了，但胸痛一直没停，还越来越重，这种情况还能做急诊支架手术吗？", "gold_ids": ["stemi_1"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_2"]}
+{"id": "stemi_1__2", "question": "对于缺血性胸痛持续不缓解、出现严重心律失常或血压不稳定的超时间窗患者，直接PCI的推荐级别是什么？", "gold_ids": ["stemi_1"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_2"]}
+{"id": "stemi_3__1", "question": "急性心梗发病在12小时以内，从进医院大门到开通血管，时间的硬指标是多少？", "gold_ids": ["stemi_3"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_3__2", "question": "对于12小时内的STEMI，直接PCI要求首次医疗接触到导丝通过的时间窗是多少？", "gold_ids": ["stemi_3"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_4__1", "question": "如果附近医院做不了急诊介入，而且估算转院做手术会超过2小时，溶栓有没有时间限制？", "gold_ids": ["stemi_4"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_4__2", "question": "在没有直接PCI条件且转运延迟时，启动溶栓治疗的决策时限是多少分钟？", "gold_ids": ["stemi_4"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_5__1", "question": "大夫说需要溶栓，现在最好用哪几类药来溶？", "gold_ids": ["stemi_5"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_5__2", "question": "指南推荐用于STEMI溶栓的特异性纤溶酶原激活剂包括哪些？", "gold_ids": ["stemi_5"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_6__1", "question": "打完溶栓针后，感觉好像好了一些，是不是就不用转院去做造影了？", "gold_ids": ["stemi_6"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_6__2", "question": "溶栓后不管血管有没有通，应该多长时间内转到能放支架的医院做冠脉造影？", "gold_ids": ["stemi_6"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_7__1", "question": "如果这家医院不能做急诊支架，但120送我去旁边的PCI医院时间小于2小时，该怎么选择？", "gold_ids": ["stemi_7"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_7__2", "question": "首诊医院无法行直接PCI，但转运时间在120分钟以内，应该怎么决策？", "gold_ids": ["stemi_7"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_8__1", "question": "心梗放完支架，阿司匹林和另一种抗血小板药一起吃，至少得吃多久？", "gold_ids": ["stemi_8"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_8__2", "question": "所有STEMI患者，双联抗血小板治疗的推荐时程是多少个月？", "gold_ids": ["stemi_8"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_9__1", "question": "医生给我开了倍林达，这个药的起始冲击量和每天的维持剂量怎么吃？", "gold_ids": ["stemi_9"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_9__2", "question": "在没有禁忌的情况下，替格瑞洛作为首选P2Y12抑制剂，其标准用药方案是什么？", "gold_ids": ["stemi_9"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_10__1", "question": "如果用不了替格瑞洛，换波立维的话，开始的冲击量和日常维持量是多少？", "gold_ids": ["stemi_10"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_10__2", "question": "因禁忌无法使用替格瑞洛时，氯吡格雷的负荷量和维持量如何选择？", "gold_ids": ["stemi_10"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_11__1", "question": "做支架术中发现我血管里血栓特别多，血流很慢，术中可以用哪类强效抗栓药？", "gold_ids": ["stemi_11"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_11__2", "question": "直接PCI术中遇到高血栓负荷或慢血流、无复流，可以考虑加用什么药物？", "gold_ids": ["stemi_11"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_12__1", "question": "什么样的非ST段抬高心梗病人需要像ST段抬高心梗那样，直接紧急上台做造影？", "gold_ids": ["stemi_12"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_12__2", "question": "对于出现血液动力学不稳定、恶性心律失常等极高危特征的NSTE-ACS患者，急诊冠脉造影的时间要求是多少？", "gold_ids": ["stemi_12"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_13__1", "question": "老人这次是非ST段抬高心梗，GRACE评分160多分，要马上手术还是先缓一缓？", "gold_ids": ["stemi_13"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_13__2", "question": "GRACE评分超过140的高危NSTE-ACS患者，应该在什么时间范围内采取侵入性策略？", "gold_ids": ["stemi_13"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_14__1", "question": "我GRACE评分135，属于中危，医生说不用马上手术，那最迟多久做冠脉造影比较合适？", "gold_ids": ["stemi_14"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_14__2", "question": "对于GRACE评分在109到140之间的中危患者，指南推荐何时完成侵入性策略？", "gold_ids": ["stemi_14"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_15__1", "question": "评估为低危的非ST段抬高心梗，一定要马上住院放支架吗？", "gold_ids": ["stemi_15"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_15__2", "question": "低危NSTE-ACS患者，如果无创检查未发现缺血证据，可以选择什么样的治疗路径？", "gold_ids": ["stemi_15"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_16__1", "question": "所有非ST段抬高急性冠脉综合征的病人，是不是也应该像心梗一样吃两种抗血小板药？", "gold_ids": ["stemi_16"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_16__2", "question": "NSTE-ACS患者如无禁忌，应立即启动的双联抗血小板方案是什么，需要维持多长时间？", "gold_ids": ["stemi_16"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_17__1", "question": "确诊了非ST段抬高心梗，在阿司匹林和替格瑞洛之外，还需不需要再加打抗凝针？", "gold_ids": ["stemi_17"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_17__2", "question": "诊断明确的NSTE-ACS，在双抗基础上应联合使用的抗凝药物有哪些？", "gold_ids": ["stemi_17"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_18__1", "question": "心梗出院后，阿司匹林这辈子都得吃吗，每天吃多少？", "gold_ids": ["stemi_18"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_18__2", "question": "心肌梗死患者如果没有禁忌，长期服用阿司匹林的推荐维持剂量是多少？", "gold_ids": ["stemi_18"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_19__1", "question": "我出血风险不大，但医生说我血管病变重、再梗风险高，双抗能吃到一年多以后吗？", "gold_ids": ["stemi_19"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_19__2", "question": "对于高缺血风险且低出血风险的心梗后患者，可否延长双联抗血小板的疗程？", "gold_ids": ["stemi_19"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_20__1", "question": "心梗后降胆固醇的目标是不是必须低于1.8，用什么强度的他汀？", "gold_ids": ["stemi_20"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_20__2", "question": "心梗后启动降脂治疗，LDL-C应控制到什么水平，推荐使用哪种强度的他汀？", "gold_ids": ["stemi_20"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_21__1", "question": "支架术后的倍他乐克，是不是出院才开始吃，还是心梗一开始就得用上？", "gold_ids": ["stemi_21"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_21__2", "question": "无禁忌的STEMI患者应在什么时间窗口内启动口服β受体阻滞剂？", "gold_ids": ["stemi_21"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_22__1", "question": "如果心梗是前壁的，心脏彩超显示射血分数只有35%，降压药首选哪一类？", "gold_ids": ["stemi_22"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_22__2", "question": "前壁心梗或LVEF降低的患者，应使用哪类药物，不耐受时换用哪类？", "gold_ids": ["stemi_22"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_23__1", "question": "心梗后射血分数低于40%，还有心衰症状，利尿剂里螺内酯是不是必须用？", "gold_ids": ["stemi_23"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_23__2", "question": "LVEF≤40%且合并心衰症状或糖尿病的心梗后患者，推荐哪类受体拮抗剂？", "gold_ids": ["stemi_23"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_24__1", "question": "心梗后的血压，控制在多少合适？如果同时有糖尿病，是不是要更严一点？", "gold_ids": ["stemi_24"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_24__2", "question": "心肌梗死患者血压控制的一般目标和合并糖尿病、慢性肾病时的强化目标分别是什么？", "gold_ids": ["stemi_24"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_25__1", "question": "放了支架后，烟还能偶尔抽一两根吗？二手烟要不要紧？", "gold_ids": ["stemi_25"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_25__2", "question": "心梗后对吸烟和被动吸烟的建议是什么？", "gold_ids": ["stemi_25"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_26__1", "question": "心梗出院后，医生建议我去心脏康复中心，那主要做什么锻炼？", "gold_ids": ["stemi_26"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_26__2", "question": "推荐心肌梗死后患者参与以什么为基础的心脏康复项目？", "gold_ids": ["stemi_26"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_27__1", "question": "心梗合并糖尿病，血糖控制到糖化血红蛋白多少算达标，同时要特别注意什么？", "gold_ids": ["stemi_27"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_27__2", "question": "合并糖尿病的心梗患者，HbA1c控制目标是多少，治疗中需警惕什么？", "gold_ids": ["stemi_27"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_28__1", "question": "心梗后减肥的目标，体重指数和腰围分别要求达到多少？", "gold_ids": ["stemi_28"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_28__2", "question": "心肌梗死后患者建议将BMI和腰围控制在什么范围？", "gold_ids": ["stemi_28"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "svt_1__1", "question": "我心跳突然飙到180，但血压正常，医生让我先怎么做能自己把心跳降下来？", "gold_ids": ["svt_1"], "topic": "svt", "type": "current"}
+{"id": "svt_1__2", "question": "对于血压稳定的窄QRS波室上速，首选的非药物治疗措施是什么？", "gold_ids": ["svt_1"], "topic": "svt", "type": "current"}
+{"id": "svt_2__1", "question": "我深吸气、憋气半天还是心慌得不行，接下来该用什么药来快速终止心动过速？", "gold_ids": ["svt_2"], "topic": "svt", "type": "current"}
+{"id": "svt_2__2", "question": "刺激迷走神经没能终止窄QRS室上速，应首选静脉推注什么药物？", "gold_ids": ["svt_2"], "topic": "svt", "type": "current"}
+{"id": "svt_3__1", "question": "室上速发作时如果出现休克或严重胸痛，必须马上进行什么紧急处理？", "gold_ids": ["svt_3"], "topic": "svt", "type": "current"}
+{"id": "svt_3__2", "question": "任何类型的室上性心动过速，一旦患者血压垮了、出现心衰或心肌缺血，应立即采取什么治疗？", "gold_ids": ["svt_3"], "topic": "svt", "type": "current"}
+{"id": "svt_4__1", "question": "经常发作房室结折返性心动过速，严重影响生活，想得到根治应该做什么手术？", "gold_ids": ["svt_4"], "topic": "svt", "type": "current"}
+{"id": "svt_4__2", "question": "对于有症状的AVNRT，推荐哪种根治性治疗方式？", "gold_ids": ["svt_4"], "topic": "svt", "type": "current"}
+{"id": "svt_5__1", "question": "我是预激综合征引起的房室折返性心动过速，医生建议做消融，这是要烧哪根异常电路？", "gold_ids": ["svt_5"], "topic": "svt", "type": "current"}
+{"id": "svt_5__2", "question": "症状性AVRT想彻底解决，应该推荐介入处理哪个部位？", "gold_ids": ["svt_5"], "topic": "svt", "type": "current"}
+{"id": "svt_6__1", "question": "预激伴发房颤时，为什么不能用腺苷或维拉帕米这些药？", "gold_ids": ["svt_6"], "topic": "svt", "type": "current"}
+{"id": "svt_6__2", "question": "预激合并房扑/房颤的情况下，哪些静脉药物是绝对禁忌的？", "gold_ids": ["svt_6"], "topic": "svt", "type": "current"}
+{"id": "svt_7__1", "question": "预激综合征并发房颤，血压测不出来了，这时候最关键的抢救措施是什么？", "gold_ids": ["svt_7"], "topic": "svt", "type": "current"}
+{"id": "svt_7__2", "question": "当预激伴房颤导致血流动力学崩溃时，应该如何立即处理？", "gold_ids": ["svt_7"], "topic": "svt", "type": "current"}
+{"id": "svt_8__1", "question": "房室结折返性心动过速经常发作，但又不想做消融，长期吃药预防可以选哪类药？", "gold_ids": ["svt_8"], "topic": "svt", "type": "current"}
+{"id": "svt_8__2", "question": "对于不能或不愿意接受导管消融的症状性AVNRT患者，推荐口服哪些药物来预防发作？", "gold_ids": ["svt_8"], "topic": "svt", "type": "current"}
+{"id": "svt_9__1", "question": "我是旁路引起的室上速做不了消融，心脏结构也正常，平时可以吃普罗帕酮来防止复发吗？", "gold_ids": ["svt_9"], "topic": "svt", "type": "current"}
+{"id": "svt_9__2", "question": "无法消融的AVRT患者，若没有器质性心脏病，预防用药可选择什么？", "gold_ids": ["svt_9"], "topic": "svt", "type": "current"}
+{"id": "svt_10__1", "question": "怀孕期间室上速发作，捏鼻子吹气不管用，用什么药转律对胎儿相对安全？", "gold_ids": ["svt_10"], "topic": "svt", "type": "current"}
+{"id": "svt_10__2", "question": "孕妇急性室上速迷走神经刺激无效时，哪种药物是首选且安全的？", "gold_ids": ["svt_10"], "topic": "svt", "type": "current"}
+{"id": "svt_11__1", "question": "孩子反复发作室上速，药吃不好也受不了副作用，能考虑射频消融吗？", "gold_ids": ["svt_11"], "topic": "svt", "type": "current"}
+{"id": "svt_11__2", "question": "对于药物难治的症状性儿童室上速，有经验的中心可以做导管消融吗？", "gold_ids": ["svt_11"], "topic": "svt", "type": "current"}
+{"id": "svt_12__1", "question": "急诊遇到一个窄QRS波心动过速，血压还行，但搞不清具体机制，第一步该咋处理？", "gold_ids": ["svt_12"], "topic": "svt", "type": "current"}
+{"id": "svt_12__2", "question": "窄QRS心动过速诊断不明且血流动力学稳定时，初始治疗策略是什么？", "gold_ids": ["svt_12"], "topic": "svt", "type": "current"}
+{"id": "svt_13__1", "question": "如果排除了预激和心衰，室上速用腺苷没效或者不耐受，可以静推什么钙通道阻滞剂来终止？", "gold_ids": ["svt_13"], "topic": "svt", "type": "current"}
+{"id": "svt_13__2", "question": "无禁忌证的窄QRS室上速，腺苷无效时，可静脉使用哪些非二氢吡啶类钙通道阻滞剂？", "gold_ids": ["svt_13"], "topic": "svt", "type": "current"}
+{"id": "svt_15__1", "question": "预激合并房颤但血压稳住，想马上把心律转成窦性，推荐用哪两种静脉药？", "gold_ids": ["svt_15"], "topic": "svt", "type": "temporal", "stale_ids": ["svt_14"]}
+{"id": "svt_15__2", "question": "对于血流动力学稳定的预激伴房颤，应选择哪些药物进行药物复律，而不推荐胺碘酮？", "gold_ids": ["svt_15"], "topic": "svt", "type": "temporal", "stale_ids": ["svt_14"]}
+{"id": "svt_17__1", "question": "查出显性预激但没有症状，电生理检查发现旁路前传不应期很短、风险高，需要做消融吗？", "gold_ids": ["svt_17"], "topic": "svt", "type": "temporal", "stale_ids": ["svt_16"]}
+{"id": "svt_17__2", "question": "无症状的预激综合征，若心内电生理评估具有高危特征，后续应该怎么处理？", "gold_ids": ["svt_17"], "topic": "svt", "type": "temporal", "stale_ids": ["svt_16"]}
+{"id": "elyte_1__1", "question": "我听说心电图要是出现那种又高又尖的T波，再加上P波没了、QRS变宽，就得赶紧拉警报，这是为什么？", "gold_ids": ["elyte_1"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_1__2", "question": "值班时看到心电图提示T波高尖、P波消失、QRS明显增宽，应当如何处置？", "gold_ids": ["elyte_1"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_3__1", "question": "家里老人突然血钾很高，心电图也乱成一团，医生说赶快推钙剂，这能起到什么作用？", "gold_ids": ["elyte_3"], "topic": "electrolyte", "type": "temporal", "stale_ids": ["elyte_2"]}
+{"id": "elyte_3__2", "question": "急性高钾血症已经出现心电图异常，为预防恶性心律失常，首选什么药物来稳定心肌？", "gold_ids": ["elyte_3"], "topic": "electrolyte", "type": "temporal", "stale_ids": ["elyte_2"]}
+{"id": "elyte_4__1", "question": "医生，除了打钙针，我家人高钾时还挂了胰岛素加糖水，这是为了把钾赶走吗？", "gold_ids": ["elyte_4"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_4__2", "question": "在急性高钾血症的快速降钾方案中，推荐使用哪种药物组合来促进钾离子内移？", "gold_ids": ["elyte_4"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_5__1", "question": "利尿剂能帮忙排钾吗？为什么医生总说没尿的人吃了也白搭？", "gold_ids": ["elyte_5"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_5__2", "question": "对于肾功能尚可的高钾患者，可考虑哪类利尿剂辅助排钾，同时需关注哪些风险？", "gold_ids": ["elyte_5"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_6__1", "question": "如果吃药打针都降不下血钾，而且肾也不好，最后只能上机器洗血了吧？", "gold_ids": ["elyte_6"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_6__2", "question": "药物疗效欠佳或合并肾衰竭的严重高钾血症，最迅速有效的治疗方式是什么？", "gold_ids": ["elyte_6"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_7__1", "question": "我心衰老病号，这次查了血钾才3.2，身上软绵绵的，大夫让我先吃钾片，行吗？", "gold_ids": ["elyte_7"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_7__2", "question": "心衰患者出现轻度低钾血症，首选什么途径补钾？重症或无法口服时如何调整？", "gold_ids": ["elyte_7"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_8__1", "question": "从血管里吊钾水速度是不是有讲究，不能太快吧？为啥胸口还要贴那么多电线盯着？", "gold_ids": ["elyte_8"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_8__2", "question": "静脉补钾时，安全输注速度一般控制在什么范围？严重低钾需加快速度时需满足哪些条件？", "gold_ids": ["elyte_8"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_9__1", "question": "血钙高到多少算非常危险，能让心电图QT间期短得几乎看不见，还容易停跳？", "gold_ids": ["elyte_9"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_9__2", "question": "当血钙显著升高对心电图产生何种影响时，应视为需要紧急报告的危急值？", "gold_ids": ["elyte_9"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_10__1", "question": "血钙太低了，心电图QT间期拉得很长，听医生说什么“扭转型室速”，这得赶紧补啥？", "gold_ids": ["elyte_10"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_10__2", "question": "严重低钙血症导致QT间期明显延长，可能诱发哪种致命性心律失常，应如何紧急处理？", "gold_ids": ["elyte_10"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_11__1", "question": "我心衰又查出镁太低，还有早搏，医生说要挂硫酸镁来稳心，这是常规操作吗？", "gold_ids": ["elyte_11"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_11__2", "question": "心力衰竭患者伴低镁血症并出现心律失常，纠正低镁的首选给药方式和药物是什么？", "gold_ids": ["elyte_11"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_12__1", "question": "如果发生那种扭来扭去的室速，不管血镁化验高不高，都要立即推硫酸镁吗？", "gold_ids": ["elyte_12"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_12__2", "question": "遇到尖端扭转型室速，无论血镁是否正常，应立刻采取什么关键措施？", "gold_ids": ["elyte_12"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_13__1", "question": "吃地高辛中毒了，心电图可能出现哪些乱七八糟的图形，必须马上停药？", "gold_ids": ["elyte_13"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_13__2", "question": "哪些心电图表现高度提示洋地黄中毒，需要立即识别并停用相关药物？", "gold_ids": ["elyte_13"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_14__1", "question": "怀疑是洋地黄药物中毒，除了马上停药，还要停用哪些药，同时要重点盯着什么？", "gold_ids": ["elyte_14"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_14__2", "question": "确诊或高度疑似洋地黄中毒后，除停用洋地黄外，还应停用哪类利尿剂，并做好什么监护？", "gold_ids": ["elyte_14"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_15__1", "question": "地高辛中毒后，如果心跳乱得很厉害，血压也稳不住，有没有专门的解药可用？", "gold_ids": ["elyte_15"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_15__2", "question": "对于地高辛所致的恶性心律失常或血流动力学不稳定，特效解毒剂是什么？", "gold_ids": ["elyte_15"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_16__1", "question": "洋地黄中毒的时候，如果血钾血镁都低，心律失常就更难弄，这时候补镁补钾能稳住心肌吗？", "gold_ids": ["elyte_16"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_16__2", "question": "洋地黄中毒合并低钾、低镁，尤其出现尖端扭转型室速时，静脉补充什么可稳定心肌电活动？", "gold_ids": ["elyte_16"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_17__1", "question": "洋地黄中毒引起的心律失常，为什么不能像往常那样用电击的方法复律？", "gold_ids": ["elyte_17"], "topic": "electrolyte", "type": "current"}
+{"id": "elyte_17__2", "question": "处理洋地黄中毒所致心律失常时，为何应避免直流电复律这一干预手段？", "gold_ids": ["elyte_17"], "topic": "electrolyte", "type": "current"}
+{"id": "hcm_1__1", "question": "医生，我家人刚查出可能有肥厚心，请问首选做什么检查能看清心肌到底多厚、心脏里面有没有堵住？", "gold_ids": ["hcm_1"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_1__2", "question": "诊断肥厚型心肌病时，哪项无创影像学检查应作为初始选择来观察心室壁、心腔和流出道？", "gold_ids": ["hcm_1"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_2__1", "question": "怀疑是肥厚型心肌病，做个普通心电图能看出什么异常来帮助判断吗？", "gold_ids": ["hcm_2"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_2__2", "question": "对可疑肥厚型心肌病患者，评估左室高电压和异常Q波等表现最基础的心电检查是什么？", "gold_ids": ["hcm_2"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_3__1", "question": "我年纪轻轻血压也不高，又爱运动，怎么才能确定这个心肌肥厚不是锻炼多或高血压引起的呢？", "gold_ids": ["hcm_3"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_3__2", "question": "确诊肥厚型心肌病时，需要先排除哪些可能引起左室肥厚的其他情况？", "gold_ids": ["hcm_3"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_4__1", "question": "我做彩超时医生说看不太清楚，或者想看看心肌有没有纤维化，下一步该做什么检查？", "gold_ids": ["hcm_4"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_4__2", "question": "当超声图像质量差或需要进一步评估心尖部和心肌纤维化时，应选择哪种影像学方法？", "gold_ids": ["hcm_4"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_5__1", "question": "我安静时不觉得堵，但一活动就胸闷，室间隔虽然厚但休息时没见梗阻，该怎么检查活动后会不会有梗阻？", "gold_ids": ["hcm_5"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_5__2", "question": "对于静息状态未发现流出道梗阻的有症状左室肥厚患者，如何诱发并评估潜伏的梗阻？", "gold_ids": ["hcm_5"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_6__1", "question": "彩超结果出来了，心室壁到底厚到多少毫米才算肥厚型心肌病，有家族史的标准是不是不一样？", "gold_ids": ["hcm_6"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_6__2", "question": "成人肥厚型心肌病的影像学诊断界值是多少，以及家族史阳性时壁厚标准如何调整？", "gold_ids": ["hcm_6"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_7__1", "question": "家里有人确诊肥厚型心肌病，为什么医生建议先证者去抽血查基因，这对家里人有什么用处？", "gold_ids": ["hcm_7"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_7__2", "question": "对已符合诊断的肥厚型心肌病患者，为何应进行心肌病相关基因检测？", "gold_ids": ["hcm_7"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_8__1", "question": "病情表现不太典型，怀疑可能是心肌淀粉样变这种特殊心肌病，怎么才能最终确诊？", "gold_ids": ["hcm_8"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_8__2", "question": "在临床表现不具特异性、需要排除浸润性心肌病时，可考虑哪种有创检查来明确病理诊断？", "gold_ids": ["hcm_8"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_9__1", "question": "初次确诊这个病，医生说要评估猝死风险，具体会问哪些情况和做哪些检查来判断？", "gold_ids": ["hcm_9"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_9__2", "question": "对肥厚型心肌病患者进行心原性猝死危险分层时，必须采集的临床信息包括哪些关键项目？", "gold_ids": ["hcm_9"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_11__1", "question": "医生说的那个计算五年猝死风险的模型是什么，如果算出来风险很高该怎么办？", "gold_ids": ["hcm_11"], "topic": "hypertrophy_cardiomyopathy", "type": "temporal", "stale_ids": ["hcm_10"]}
+{"id": "hcm_11__2", "question": "成人肥厚型心肌病患者评估猝死风险推荐使用哪项预测工具，且高危到多少时应考虑植入ICD？", "gold_ids": ["hcm_11"], "topic": "hypertrophy_cardiomyopathy", "type": "temporal", "stale_ids": ["hcm_10"]}
+{"id": "hcm_12__1", "question": "我猝死风险评分挺低的，是不是就不用安那个除颤器了？", "gold_ids": ["hcm_12"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_12__2", "question": "对于五年心原性猝死风险低于4%的肥厚型心肌病患者，是否推荐常规植入ICD？", "gold_ids": ["hcm_12"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_13__1", "question": "我有肥厚型心肌病，平时走快点就喘、胸口憋，医生给开药为啥首选这种不让心跳太快的β阻滞剂？", "gold_ids": ["hcm_13"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_13__2", "question": "症状性左室流出道梗阻的肥厚型心肌病患者，初始药物治疗应选择哪一类且避免使用血管扩张剂？", "gold_ids": ["hcm_13"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_14__1", "question": "吃β受体阻滞剂反应不好或者副作用太大受不了，还有其他口服药能替代吗，用的时候要注意什么？", "gold_ids": ["hcm_14"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_14__2", "question": "对β阻滞剂无效或不耐受的肥厚型心肌病患者，可考虑换用哪两类非二氢吡啶类钙拮抗剂，并警惕哪些情况？", "gold_ids": ["hcm_14"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_15__1", "question": "药吃了一大把症状还是很重，压差超过50了，心功能也很差，这时候该考虑做减容手术吗？", "gold_ids": ["hcm_15"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_15__2", "question": "药物治疗无效的梗阻性肥厚型心肌病患者，满足哪些血流动力学和心功能条件时推荐室间隔减容治疗？", "gold_ids": ["hcm_15"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_16__1", "question": "如果决定做减容，在有经验的大中心，外科开刀切除肥厚心肌和介入消融哪个是首选，效果好吗？", "gold_ids": ["hcm_16"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_16__2", "question": "在经验丰富的中心，为解除左室流出道梗阻，何种减容方法被认为是金标准并能带来远期益处？", "gold_ids": ["hcm_16"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_17__1", "question": "我身体条件差开不了刀，解剖结构又适合做介入，有没有创伤小一点的办法来替代外科手术？", "gold_ids": ["hcm_17"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_17__2", "question": "对于无法耐受外科手术或风险高的梗阻性患者，哪种基于导管的室间隔消融可作为替代减容选择？", "gold_ids": ["hcm_17"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_18__1", "question": "最大剂量的药都吃了还是不舒服，听说有新药能直接抑制心肌过度收缩，我这种情况能试试吗？", "gold_ids": ["hcm_18"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_18__2", "question": "在使用最大耐受剂量药物后仍有症状的梗阻性患者中，可考虑加入哪种心肌肌球蛋白抑制剂？", "gold_ids": ["hcm_18"], "topic": "hypertrophy_cardiomyopathy", "type": "current"}
+{"id": "hcm_20__1", "question": "我是非梗阻型，危险也不高，平时还能不能跑步锻炼，哪些运动是绝对不能碰的？", "gold_ids": ["hcm_20"], "topic": "hypertrophy_cardiomyopathy", "type": "temporal", "stale_ids": ["hcm_19"]}
+{"id": "hcm_20__2", "question": "低风险的非梗阻性肥厚型心肌病患者，在充分评估后可以参加什么强度的运动，同时需限定哪些活动？", "gold_ids": ["hcm_20"], "topic": "hypertrophy_cardiomyopathy", "type": "temporal", "stale_ids": ["hcm_19"]}

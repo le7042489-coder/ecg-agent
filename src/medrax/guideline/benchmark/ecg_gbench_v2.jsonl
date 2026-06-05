@@ -1,0 +1,112 @@
+{"id": "af_anticoag_2023__1", "question": "我老爸查出房颤，医生说要打分，中风险以上就得吃抗凝药，优选新型口服药，是这样吗？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__2", "question": "非瓣膜病房颤患者抗凝启动看什么评分，达到多少分男士要抗凝？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__3", "question": "房颤评分≥2分的男性，用华法林好还是新型口服抗凝药好？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__4", "question": "老太太房颤，CHA₂DS₂-VASc 3分，非得吃抗凝药吗，首选哪种？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__5", "question": "没有瓣膜病的房颤患者，抗凝决策主要依据哪个卒中风险评估工具？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__6", "question": "对于高卒中风险的房颤患者，NOAC和华法林推荐上怎么排序？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__7", "question": "医生，我房颤好几年了，什么时候必须启动抗凝？是不是男女标准不一样？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_anticoag_2023__8", "question": "非瓣膜病房颤患者卒中评分男性≥2分时，指南优先推荐哪类抗凝药物？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"]}
+{"id": "af_rate_2023__1", "question": "我房颤发作时没什么不舒服，血压也稳，心跳非得降得很低吗？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__2", "question": "血流动力学稳定且无症状的房颤患者，心室率控制宽松一点行不行？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__3", "question": "对于稳定的房颤，静息心率控制在多少属于宽松目标？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__4", "question": "房颤病人没有症状，心率小于110次/分可以接受吗？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__5", "question": "无不适感的房颤患者，需要严格把心率降到80以下吗？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__6", "question": "无症状房颤且血压正常，心室率控制策略该如何定？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__7", "question": "老妈房颤但人挺精神，医生说心率不用控制太严格，有这种说法吗？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_rate_2023__8", "question": "如果房颤患者血流动力学稳定，能不能采取宽松的心率控制方案？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "af_ablation_2023__1", "question": "我阵发性房颤，吃药效果不好，能手术根治吗？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__2", "question": "有症状的阵发性房颤患者，药物失败后下一步怎么选？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__3", "question": "阵发房颤患者不想长期吃药，可以直接做消融手术吗？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__4", "question": "患者意愿能不能让导管消融成为房颤节律控制的一线方案？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__5", "question": "对于抗心律失常药无效的阵发性房颤，指南推荐什么介入治疗？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__6", "question": "我犯病时心慌得厉害，吃了两种药都不管用，可以做射频消融吗？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__7", "question": "症状明显的阵发性房颤，导管消融在什么情况下可作首选治疗？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "af_ablation_2023__8", "question": "除了药物控制，有症状的阵发性房颤还能用什么方法维持窦性心律？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "avb_high_pacing__1", "question": "三度房室传导阻滞病人经常头晕乏力，装起搏器是必须的吗？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__2", "question": "高度房室传导阻滞出现症状，应该采取什么根本性治疗措施？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__3", "question": "症状性完全性房室传导阻滞患者，起搏器植入能改善预后吗？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__4", "question": "医生，我查出三度房室传导阻滞，总是眼前发黑，要不要装起搏器？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__5", "question": "有症状的三度或高度房室传导阻滞，指南首选的治疗是什么？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__6", "question": "高度房室传导阻滞导致晕厥的患者，起搏器植入是强烈推荐的吗？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__7", "question": "我爸心电图是三度房室传导阻滞，最近老觉得累，装起搏器能好吗？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "avb_high_pacing__8", "question": "对于有症状的高度房室传导阻滞，永久起搏的主要目的是什么？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__1", "question": "病态窦房结综合征患者，症状明确和心跳慢有关，怎么处理？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__2", "question": "症状性窦房结功能障碍，是不是直接装起搏器？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__3", "question": "我窦房结功能不好，心动过缓时有症状，需要永久起搏吗？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__4", "question": "确诊病窦综合征，并且黑矇与显著窦缓明确相关，该不该植入起搏器？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__5", "question": "有症状的病态窦房结综合征，什么治疗是根除症状的首选？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__6", "question": "窦房结功能衰退导致反复头晕，起搏器植入的推荐等级有多高？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__7", "question": "症状性病窦患者，起搏治疗的指征是只要症状与心动过缓相关吗？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "snd_pacing__8", "question": "明确由窦性停搏或严重窦缓引起症状时，指南推荐什么器械治疗？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__1", "question": "一体检就发现有一度房室传导阻滞，但从来没什么感觉，要装起搏器吗？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__2", "question": "单纯无症状的一度房室传导阻滞，需要植入起搏器吗？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__3", "question": "心电图只显示PR间期延长，没有不舒服，需要安永久起搏器吗？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__4", "question": "一度房室传导阻滞毫无症状，装起搏器有害无益对不对？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__5", "question": "没有任何症状的一度房室传导阻滞患者，起搏治疗是反对的还是推荐的？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__6", "question": "体检偶然发现一度房室传导阻滞，人好好的，医生说不必安起搏器对吗？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__7", "question": "无症状的PR间期延长，指南会建议安装永久心脏起搏器吗？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "firstdeg_avb_no_pacing__8", "question": "一度房室传导阻滞，如果不伴有症状，该不该做永久起搏？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "longqt_acquired__1", "question": "吃药后心电图QT间期变长了，首先该怎么办？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__2", "question": "获得性长QT综合征，最初的处理措施包括停可疑药物和纠正什么异常？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__3", "question": "患者服用某些药物后出现QT延长，第一步要查哪些电解质和停什么？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__4", "question": "新发现QT间期延长，在用药方面首先要审查并停用哪类药物？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__5", "question": "如果QT延长是药物引起的，除了停药还应该紧急处理什么电解质紊乱？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__6", "question": "老人肺炎后心电图QT拉长，除了停可疑抗生素，还急需查什么血指标？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__7", "question": "获得性QT延长处理的核心原则是立即去除诱因还是直接加药用β阻断剂？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_acquired__8", "question": "先天性长QT和获得性长QT的初始处理原则不同，后者首先该做什么？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__1", "question": "确诊先天性长QT综合征，如果没有哮喘，首选吃什么药预防猝死？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__2", "question": "先天性长QT综合征的一线预防性治疗药物是哪一类？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__3", "question": "孩子诊断了先天性长QT综合征，医生让长期吃普萘洛尔，这是规范治疗吗？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__4", "question": "对于先天性长QT，只要没有禁忌证，都应该优先用哪种药物？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__5", "question": "遗传性长QT综合征患者，降低恶性心律失常风险首选β受体阻滞剂对不对？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__6", "question": "先天性长QT患者首选治疗是药物还是直接装ICD？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__7", "question": "我确诊了先天性长QT，医生建议每天吃倍他乐克，是因为这个药是首选吗？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "longqt_congenital_bb__8", "question": "除非有禁忌，否则先天性长QT综合征患者必须长期服用哪类药来预防恶性事件？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "stemi_ppci_2019__1", "question": "心梗发作3小时被送到医院，医生说需要马上做支架，那个门球时间最好少于多少？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__2", "question": "发病12小时内的急性ST段抬高心梗，最要紧的治疗是什么？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__3", "question": "急性心梗发作10小时，能直接做急诊介入开通血管吗？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__4", "question": "STEMI患者发病在12小时内，必须马上做的治疗是溶栓还是急诊PCI？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__5", "question": "突发心梗，医生说要争取在90分钟内开通血管，这个时间是从进医院算的吗？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__6", "question": "对于发病12小时以内的ST段抬高型心肌梗死，指南推荐立即直接PCI吗？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__7", "question": "患者胸痛2小时，心电图示急性ST段抬高，首选再灌注策略是什么？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_ppci_2019__8", "question": "急性ST段抬高心梗，直接PCI要求门球时间控制在多长时间以内？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"]}
+{"id": "stemi_lysis__1", "question": "心梗发病3小时，但送到能做支架的医院要3个多小时，是该先用溶栓药吗？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__2", "question": "STEMI患者无法在120分钟内开通血管，没有禁忌证该做什么？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__3", "question": "预计从首次接触到导丝通过超过120分钟的ST段抬高心梗，该不该溶栓？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__4", "question": "如果急性心梗患者不能在2小时内进行急诊PCI，首选什么替代再灌注方案？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__5", "question": "医生评估转运时间过长，给病人先用上了溶栓药，这是符合指南的吗？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__6", "question": "急性ST段抬高心梗，首次医疗接触至导丝通过时间预计超过120分钟，怎么办？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__7", "question": "基层医院没有急诊PCI条件，预计转运时间超过120分钟，对STEMI患者该如何处理？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "stemi_lysis__8", "question": "发病小于12小时的STEMI，当直接PCI不可及时，标准再灌注治疗是什么？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "svt_acute_vagal__1", "question": "突然心跳得厉害，血压正常，医生说先憋气试试，实在不行再推药，推的什么药？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__2", "question": "规则窄QRS波室上速，血流动力学稳定时，第一招是什么？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__3", "question": "阵发性室上速发作，血压还可以，首选治疗是迷走神经刺激对吗？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__4", "question": "室上速急诊处理中，如果教患者用力呼气憋气没效果，接下来静脉快速用什么药？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__5", "question": "一个年轻女性突然心慌，心电图是窄QRS波心动过速，血压正常，第一步先做什么？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__6", "question": "对于稳定的规则窄QRS波室上速，腺苷如何使用才符合指南？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__7", "question": "医生让我吹针管，这个叫做改良瓦氏动作，如果没用马上会静脉推注什么？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_acute_vagal__8", "question": "窄QRS波心动过速稳定患者，物理方法失败后的首选药物是腺苷还是维拉帕米？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__1", "question": "室上速反复发作，每次都得去医院推药，有什么办法能彻底治好？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__2", "question": "症状性室上速反复犯病，指南推荐哪种根治性治疗？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__3", "question": "我室上速一年发好几次，严重影响生活，医生说可以做消融根治，是真的吗？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__4", "question": "对于反复发作且有症状的室上性心动过速，导管消融是推荐的吗？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__5", "question": "不想再受室上速反复发作的罪，长期来说一劳永逸的方法是什么？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__6", "question": "药物治疗只是临时控制，症状性室上速想要根治首选什么手术？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__7", "question": "频繁发作的症状性室上速，根治性治疗手段是药物还是导管消融？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "svt_ablation__8", "question": "反复出现心慌、心电图证实为室上速，根治性导管消融的推荐证据有多强？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "hyperkalemia_ecg__1", "question": "血钾很高，心电图T波高尖，急诊得马上用什么药保护心脏？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__2", "question": "高钾血症出现QRS波变宽，紧急处理为什么先用钙剂？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__3", "question": "高钾血症患者心电图出现异常，首要的紧急应对措施是什么？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__4", "question": "血钾升高并且心电图已经有变化，为防止室颤，应该立即静脉给什么？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__5", "question": "严重高钾伴有高尖T波，首要治疗是静脉推注钙剂对吗？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__6", "question": "透析患者血钾7.0，心电图T波高尖，医生立马注射葡萄糖酸钙，这是起什么作用？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__7", "question": "高钾血症伴心电图改变时，钙剂的作用是降钾还是稳定心肌细胞膜？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hyperkalemia_ecg__8", "question": "血钾高于正常并出现特征性心电图表现，为什么首选钙剂治疗？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__1", "question": "低血钾患者心电图出现明显U波，应该怎么治疗？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__2", "question": "血钾低至2.8，心电图见U波增高，除补钾外还需做什么？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__3", "question": "心电图发现U波提示低钾，处理原则包括补充丢失和什么？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__4", "question": "低钾血症伴心电图改变，补钾的同时是否要查找并去除病因？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__5", "question": "患者拉肚子后四肢无力，心电图有U波，除了静脉补钾还要针对什么治疗？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__6", "question": "低钾导致心电图异常时，补钾途径可以选择静脉还是口服？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__7", "question": "低钾血症出现特征性心电变化，紧急处理包括哪些方面？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "hypokalemia_ecg__8", "question": "利尿剂引起的低钾，心电图有U波，除了停利尿剂和补钾，还需要关注什么？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}

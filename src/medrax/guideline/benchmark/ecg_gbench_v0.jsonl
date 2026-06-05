@@ -1,0 +1,14 @@
+{"id": "q_af_anticoag", "question": "房颤患者需要长期吃抗凝药预防中风吗？", "gold_ids": ["af_anticoag_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_anticoag_2018"], "findings": ["AFIB"]}
+{"id": "q_af_rate", "question": "房颤的心室率控制到多少比较合适？", "gold_ids": ["af_rate_2023"], "topic": "atrial_fibrillation", "type": "temporal", "stale_ids": ["af_rate_2018"]}
+{"id": "q_af_ablation", "question": "阵发性房颤吃药控制不好，还能做导管消融吗？", "gold_ids": ["af_ablation_2023"], "topic": "atrial_fibrillation", "type": "current"}
+{"id": "q_avb_high", "question": "三度房室传导阻滞需要装永久起搏器吗？", "gold_ids": ["avb_high_pacing"], "topic": "bradycardia_conduction", "type": "current", "findings": ["3AVB"]}
+{"id": "q_snd", "question": "病态窦房结综合征有症状该怎么治疗？", "gold_ids": ["snd_pacing"], "topic": "bradycardia_conduction", "type": "current", "findings": ["SBRAD"]}
+{"id": "q_firstdeg", "question": "没有症状的一度房室传导阻滞要不要装起搏器？", "gold_ids": ["firstdeg_avb_no_pacing"], "topic": "bradycardia_conduction", "type": "current"}
+{"id": "q_longqt_acq", "question": "药物引起的QT间期延长应该怎么处理？", "gold_ids": ["longqt_acquired"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "q_longqt_cong", "question": "先天性长QT综合征首选什么药物？", "gold_ids": ["longqt_congenital_bb"], "topic": "qt_channelopathy", "type": "current"}
+{"id": "q_stemi_ppci", "question": "STEMI发病12小时以内首选哪种再灌注方式？", "gold_ids": ["stemi_ppci_2019"], "topic": "ischemia_stemi", "type": "temporal", "stale_ids": ["stemi_ppci_2015"], "findings": ["STE_"]}
+{"id": "q_stemi_lysis", "question": "STEMI没办法及时做PCI该怎么办？", "gold_ids": ["stemi_lysis"], "topic": "ischemia_stemi", "type": "current"}
+{"id": "q_svt_acute", "question": "室上性心动过速发作时怎么紧急终止？", "gold_ids": ["svt_acute_vagal"], "topic": "svt", "type": "current", "findings": ["PSVT"]}
+{"id": "q_svt_ablation", "question": "室上速反复发作，能不能根治？", "gold_ids": ["svt_ablation"], "topic": "svt", "type": "current"}
+{"id": "q_hyperk", "question": "高钾血症心电图出现改变时怎么紧急处理？", "gold_ids": ["hyperkalemia_ecg"], "topic": "electrolyte", "type": "current"}
+{"id": "q_hypok", "question": "低钾血症心电图出现U波该怎么处理？", "gold_ids": ["hypokalemia_ecg"], "topic": "electrolyte", "type": "current"}

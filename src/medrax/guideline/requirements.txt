@@ -1,0 +1,19 @@
+# Guideline retrieval dependencies.
+#
+# The CORE retriever + CLI run with the Python standard library only
+# (pure-Python BM25 fallback) — nothing here is required just to query the
+# bundled dev corpus in BM25 mode.
+#
+# Install these to (a) build a dense index on the laptop and (b) get
+# hybrid (dense + BM25 + RRF) quality on-device:
+
+# --- index build (run on the DEV LAPTOP, not on DK-2500) ---
+sentence-transformers>=2.2     # query/corpus embedding (bge-small-zh-v1.5)
+numpy                          # embedding matrix + cosine
+
+# --- optional accelerators (auto-used if importable) ---
+jieba                          # better Chinese tokenization for BM25
+
+# On the 8GB DK-2500: prefer BAAI/bge-small-zh-v1.5 (~95MB) and consider an
+# ONNX/OpenVINO int8 export for the query encoder to fit the RAM budget.
+# Make dense optional (enable_dense=False) to run BM25-only if RAM is tight.

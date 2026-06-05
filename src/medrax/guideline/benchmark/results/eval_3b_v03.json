@@ -1,0 +1,27 @@
+{
+  "desc": "ECG-GBench answer-quality on corpus v0.3 (170 recs), 100 sampled questions; deployed 3B generates, DeepSeek judges vs gold. 2026-06-05.",
+  "corpus": "egg-2026.06-cn-v0.3 (170)",
+  "n": 100,
+  "overall": {
+    "n": 100,
+    "no_rag": {
+      "correct": 0.22,
+      "faithful": 0.55
+    },
+    "with_rag": {
+      "correct": 0.76,
+      "faithful": 0.8
+    },
+    "delta": {
+      "correct": 0.54,
+      "faithful": 0.25
+    }
+  },
+  "rag_fixed": 57,
+  "rag_regressions": 3,
+  "by_type": {
+    "current": "0.22->0.76",
+    "temporal": "0.25->0.75"
+  },
+  "note": "vs v0.2(112q): 0.19->0.80 (+0.62); v0.3 0.22->0.76 (+0.54), lower ceiling = harder retrieval on bigger corpus. delta robust."
+}
