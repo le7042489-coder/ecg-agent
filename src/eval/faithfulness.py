@@ -1,35 +1,30 @@
 import json
 import os
 import time
-import argparse  # Using argparse
-# You will need to install the google-generativeai and tqdm libraries
-# pip install google-generativeai tqdm
-import google.generativeai as genai
+import argparse
+from openai import OpenAI
 from tqdm import tqdm
 
-def evaluate_with_gemini(tool_output: str, response_content: str) -> int:
-    """
-    Evaluates the faithfulness of a response to a tool_output using Gemini.
-    Includes retry logic and response validation.
+_client = None
 
-    Args:
-        tool_output: The JSON string from the tool.
-        response_content: The assistant's response to be evaluated.
-
-    Returns:
-        1 if the response is faithful, 0 otherwise.
-    """
-    # 1. Configure the Gemini API using the environment variable
-    try:
-        api_key = os.environ.get("GOOGLE_API_KEY")
+def _get_client():
+    global _client
+    if _client is None:
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
         if not api_key:
-            print("Error: GOOGLE_API_KEY environment variable not set.")
-            return 0
-        genai.configure(api_key=api_key)
-        # Using a current, robust model name
-        model = genai.GenerativeModel('gemini-2.5-pro')
-    except Exception as e:
-        print(f"Error configuring the Gemini API: {e}")
+            raise RuntimeError("DEEPSEEK_API_KEY environment variable not set.")
+        _client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+    return _client
+
+def evaluate_with_llm(tool_output: str, response_content: str) -> int:
+    """
+    Evaluates the faithfulness of a response to a tool_output using DeepSeek.
+    Includes retry logic and response validation.
+    """
+    try:
+        client = _get_client()
+    except RuntimeError as e:
+        print(f"Error: {e}")
         return 0
 
     prompt = f"""
@@ -62,12 +57,13 @@ def evaluate_with_gemini(tool_output: str, response_content: str) -> int:
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = model.generate_content(prompt)
-            if response.parts:
-                return int(response.text.strip())
-            else:
-                print(f"Warning: Received an empty response. Finish reason: {response.candidates[0].finish_reason}. Scoring as 0.")
-                return 0
+            response = client.chat.completions.create(
+                model="deepseek-v4-pro",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2048,
+            )
+            text = response.choices[0].message.content.strip()
+            return int(text)
         except Exception as e:
             print(f"An error occurred during API call (attempt {attempt + 1}/{max_retries}): {e}")
             if attempt < max_retries - 1:
@@ -109,7 +105,7 @@ def analyze_file(file_path: str) -> tuple[str, float] | None:
                             response_content = dialogue[i+1].get("content")
 
                             if response_content:
-                                score = evaluate_with_gemini(tool_output_content, response_content)
+                                score = evaluate_with_llm(tool_output_content, response_content)
                                 scores.append(score)
             except json.JSONDecodeError:
                 print(f"Warning: Skipping a malformed line in {file_path}")

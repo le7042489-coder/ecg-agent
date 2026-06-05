@@ -26,9 +26,9 @@ class DialogueQualityEvaluator:
         """
         Initializes the dialogue quality evaluator.
         """
-        self.api_key = api_key or os.getenv('GOOGLE_API_KEY')
+        self.api_key = api_key or os.getenv('DEEPSEEK_API_KEY')
         if not self.api_key:
-            logger.error("A Google API key is required. Please set the GOOGLE_API_KEY environment variable.")
+            logger.error("A DeepSeek API key is required. Please set the DEEPSEEK_API_KEY environment variable.")
             sys.exit(1)
         
         self.output_dir = output_dir
@@ -71,7 +71,7 @@ class DialogueQualityEvaluator:
         return True
 
     def _load_cefr_levels_from_hf(self):
-        """Loads CEFR levels from the Hugging Face dataset."""
+        """Loads CEFR levels from the Hugging Face dataset. Non-fatal if unavailable."""
         logger.info("Loading CEFR levels from Hugging Face dataset...")
         try:
             dataset = load_dataset('gustmd0121/single-lead-II-ecg-mtd-dataset-gt-gemini-pro', split='train')
@@ -84,8 +84,7 @@ class DialogueQualityEvaluator:
                     continue
             logger.info(f"Loaded CEFR levels for {len(self.cefr_levels)} unique ECG IDs.")
         except Exception as e:
-            logger.error(f"Failed to load Hugging Face dataset: {e}")
-            sys.exit(1)
+            logger.warning(f"HF dataset unavailable ({e}). CEFR levels will default to 'B'.")
 
     def filter_to_common_samples(self):
         """Finds common ECG IDs across all loaded models and randomly samples if needed."""
@@ -240,11 +239,10 @@ CEFR Adherence Justification: [one-sentence justification]
         logger.info("🚀 Starting Dialogue Quality Evaluation...")
         
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            self.evaluator_model = genai.GenerativeModel('gemini-2.5-pro')
+            from openai import OpenAI
+            self._client = OpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
         except Exception as e:
-            logger.error(f"Failed to initialize Gemini model: {e}")
+            logger.error(f"Failed to initialize DeepSeek client: {e}")
             return None
 
         results_filename = 'llm_eval_dialogue_quality.json'
@@ -293,11 +291,6 @@ CEFR Adherence Justification: [one-sentence justification]
                     continue
 
         # --- Evaluation Loop ---
-        safety_settings = {
-            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE", "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE", "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
-        }
-
         tasks = [(ecg_id, model_name) for ecg_id in self.common_ecg_ids for model_name in self.MODELS if self.model_data.get(model_name)]
 
         for ecg_id, model_name in tqdm(tasks, desc="Evaluating Dialogues"):
@@ -315,9 +308,13 @@ CEFR Adherence Justification: [one-sentence justification]
             prompt = self._create_dialogue_quality_prompt(clean_dialogue_text, cefr_level)
 
             try:
-                response = self.evaluator_model.generate_content(prompt, safety_settings=safety_settings)
-                score_data = self._parse_llm_response(response.text)
-                time.sleep(1) # Rate limit to avoid API errors
+                response = self._client.chat.completions.create(
+                    model="deepseek-v4-pro",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=2048,
+                )
+                score_data = self._parse_llm_response(response.choices[0].message.content)
+                time.sleep(1)
             except Exception as e:
                 # Check for specific quota-related errors to halt the script
                 error_text = str(e).lower()
@@ -364,10 +361,14 @@ CEFR Adherence Justification: [one-sentence justification]
                     summary[model_name]['errors'] += 1
                     continue
                 
-                if 'naturalness' in scores and 'cefr_adherence' in scores:
-                    summary[model_name]['naturalness'].append(scores['naturalness']['score'])
-                    summary[model_name]['cefr_adherence'].append(scores['cefr_adherence']['score'])
+                nat = scores.get('naturalness', {})
+                cefr = scores.get('cefr_adherence', {})
+                if isinstance(nat, dict) and 'score' in nat and isinstance(cefr, dict) and 'score' in cefr:
+                    summary[model_name]['naturalness'].append(nat['score'])
+                    summary[model_name]['cefr_adherence'].append(cefr['score'])
                     summary[model_name]['count'] += 1
+                else:
+                    summary[model_name]['errors'] += 1
         
         report_lines = [
             "# Dialogue Quality Evaluation Report",

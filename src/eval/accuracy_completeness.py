@@ -38,15 +38,15 @@ class ECGDialogueEvaluator:
     def __init__(self, api_key: Optional[str] = None, output_dir: str = 'evaluation_results', max_samples_per_category: Optional[int] = None):
         """
         Initialize the evaluator.
-        
+
         Args:
-            api_key: Google API key for Gemini-pro. If None, will try to get from environment.
+            api_key: DeepSeek API key. If None, will try to get from environment.
             output_dir: Output directory for saving results.
             max_samples_per_category: The maximum number of samples to evaluate PER CATEGORY.
         """
-        self.api_key = api_key or os.getenv('GOOGLE_API_KEY')
+        self.api_key = api_key or os.getenv('DEEPSEEK_API_KEY')
         if not self.api_key:
-            logger.warning("No Google API key provided or found in environment. LLM-as-Judge evaluation will be skipped.")
+            logger.warning("No DeepSeek API key provided or found in environment. LLM-as-Judge evaluation will be skipped.")
         
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
@@ -234,7 +234,7 @@ class ECGDialogueEvaluator:
         except Exception as e: logger.warning(f"Error saving incremental results to {filepath}: {e}")
 
     def _load_ground_truth_from_hf(self):
-        """Load and categorize ground truth responses from the Hugging Face dataset."""
+        """Load and categorize ground truth responses. Try HF first, fall back to local JSONL."""
         logger.info("Loading ground truth from Hugging Face dataset")
         try:
             dataset = load_dataset('gustmd0121/single-lead-I-ecg-mtd-dataset-gt-gemini-pro', split='train')
@@ -247,11 +247,28 @@ class ECGDialogueEvaluator:
                     self.ground_truth[ecg_id] = self._categorize_assistant_responses(dialogue)
                 except (json.JSONDecodeError, KeyError) as e:
                     logger.warning(f"Skipping ground truth row due to parsing error: {e}")
-            
+
             logger.info(f"Processed ground truth for {len(self.ground_truth)} unique ECG IDs.")
         except Exception as e:
-            logger.error(f"Failed to load or process Hugging Face dataset: {e}")
+            logger.warning(f"HF dataset unavailable ({e}), falling back to ground_truth_dialogue from JSONL files.")
             self.ground_truth = {}
+            all_responses = (self.llama_1b_responses + self.llama_3b_responses +
+                             self.llama_8b_responses + self.qwen3_32b_responses +
+                             self.gemini_responses + self.pulse_responses + self.gem_responses)
+            for item in all_responses:
+                gt_dialogue = item.get('ground_truth_dialogue')
+                if not gt_dialogue:
+                    continue
+                ecg_file = item.get('ecg_file', '')
+                if isinstance(ecg_file, list):
+                    ecg_file = ecg_file[0] if ecg_file else ''
+                match = re.search(r'(\d+)', ecg_file)
+                if not match:
+                    continue
+                ecg_id = match.group(0)
+                if ecg_id not in self.ground_truth:
+                    self.ground_truth[ecg_id] = self._categorize_assistant_responses(gt_dialogue)
+            logger.info(f"Loaded ground truth from JSONL for {len(self.ground_truth)} ECG IDs.")
 
     def extract_and_categorize_responses(self) -> Dict:
         """Extract and categorize all assistant responses for all loaded models."""
@@ -350,46 +367,36 @@ class ECGDialogueEvaluator:
         """
         if not self.api_key or not self.ground_truth: return {}
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel('gemini-2.5-pro') # Updated model name
+            from openai import OpenAI
+            client = OpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
         except Exception as e:
-            logger.error(f"Error initializing Gemini model: {e}. Skipping tool response evaluation.")
+            logger.error(f"Error initializing DeepSeek client: {e}. Skipping tool response evaluation.")
             return {}
 
         results_filename = f'llm_eval_{category}.json'
         evaluation_results = self._load_existing_results(results_filename)
         logger.info(f"Starting LLM-as-Judge evaluation for category: '{category}'...")
 
-        safety_settings = {
-            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
-            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
-            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
-        }
-
         for ecg_id, gt_data in self.ground_truth.items():
             if ecg_id not in evaluation_results: evaluation_results[ecg_id] = {}
-            
+
             gt_category_responses = gt_data.get(category, {})
             for user_query, gt_response_data in gt_category_responses.items():
-                
+
                 for model_name in self.MODELS:
-                    # Logic to check if re-evaluation is needed
                     should_skip = False
                     if model_name in evaluation_results.get(ecg_id, {}):
                         for res in evaluation_results[ecg_id][model_name]:
                             res_context = res.get('response_data', {}).get('context', {})
                             if res_context and res_context.get('user_query') == user_query:
                                 score_data = res.get('score', {})
-                                # If the score exists AND it is NOT the specific error we want to retry, then we skip.
                                 if score_data.get('error') != 'Model did not provide a response for this query.':
                                     should_skip = True
-                                break # Found the relevant entry, no need to check further.
-                    
+                                break
+
                     if should_skip:
                         continue
-                    
+
                     model_dialogue_data = categorized_responses.get(ecg_id, {}).get(model_name)
                     if not model_dialogue_data: continue
 
@@ -398,9 +405,9 @@ class ECGDialogueEvaluator:
                         if user_query in model_dialogue_data.get(search_category, {}):
                             model_response_data = model_dialogue_data[search_category][user_query]
                             break
-                    
+
                     logger.info(f"Evaluating {model_name.upper()} for ECG ID: {ecg_id} (Query: '{user_query[:30]}...', Category: {category})")
-                    
+
                     if model_name not in evaluation_results[ecg_id]:
                         evaluation_results[ecg_id][model_name] = []
 
@@ -410,12 +417,15 @@ class ECGDialogueEvaluator:
                     else:
                         try:
                             prompt = self._create_tool_evaluation_prompt(ecg_id, model_response_data, model_name, gt_response_data['response'], category)
-                            response = model.generate_content(prompt, safety_settings=safety_settings)
-                            
-                            if not response.parts:
-                                raise ValueError("The model returned an empty response, likely due to a content filter.")
-                                
-                            score = self._parse_structured_response(response.text, ['accuracy', 'completeness'])
+                            response = client.chat.completions.create(
+                                model="deepseek-v4-pro",
+                                messages=[{"role": "user", "content": prompt}],
+                                max_tokens=2048,
+                            )
+                            response_text = response.choices[0].message.content
+                            if not response_text:
+                                raise ValueError("The model returned an empty response.")
+                            score = self._parse_structured_response(response_text, ['accuracy', 'completeness'])
                         except Exception as e:
                             logger.error(f"Error evaluating {model_name} on {ecg_id} for {category}: {e}")
                             raw_response_text = str(response) if 'response' in locals() else "Response object not created."
@@ -453,11 +463,10 @@ class ECGDialogueEvaluator:
         """
         if not self.api_key or not self.ground_truth: return {}
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel('gemini-2.5-pro') # Updated model name
+            from openai import OpenAI
+            client = OpenAI(api_key=self.api_key, base_url="https://api.deepseek.com")
         except Exception as e:
-            logger.error(f"Error initializing Gemini model: {e}. Skipping direct response evaluation.")
+            logger.error(f"Error initializing DeepSeek client: {e}. Skipping direct response evaluation.")
             return {}
 
         results_filename = 'llm_eval_direct_response.json'
@@ -465,32 +474,23 @@ class ECGDialogueEvaluator:
         logger.info("Starting LLM-as-Judge evaluation for category: 'direct_response'...")
         category = 'direct_response'
 
-        safety_settings = {
-            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
-            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
-            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
-            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
-        }
-
         for ecg_id, gt_data in self.ground_truth.items():
             if ecg_id not in evaluation_results: evaluation_results[ecg_id] = {}
 
             gt_category_responses = gt_data.get(category, {})
             for user_query, gt_response_data in gt_category_responses.items():
-                
+
                 for model_name in self.MODELS:
-                    # Logic to check if re-evaluation is needed
                     should_skip = False
                     if model_name in evaluation_results.get(ecg_id, {}):
                         for res in evaluation_results[ecg_id][model_name]:
                             res_context = res.get('response_data', {}).get('context', {})
                             if res_context and res_context.get('user_query') == user_query:
                                 score_data = res.get('score', {})
-                                # If the score exists AND it is NOT the specific error we want to retry, then we skip.
                                 if score_data.get('error') != 'Model did not provide a response for this query.':
                                     should_skip = True
-                                break # Found the relevant entry, no need to check further.
-                    
+                                break
+
                     if should_skip:
                         continue
 
@@ -502,7 +502,7 @@ class ECGDialogueEvaluator:
                         if user_query in model_dialogue_data.get(search_category, {}):
                             model_response_data = model_dialogue_data[search_category][user_query]
                             break
-                    
+
                     logger.info(f"Evaluating {model_name.upper()} for ECG ID: {ecg_id} (Query: '{user_query[:30]}...', Category: {category})")
 
                     if model_name not in evaluation_results[ecg_id]:
@@ -514,12 +514,15 @@ class ECGDialogueEvaluator:
                     else:
                         try:
                             prompt = self._create_direct_evaluation_prompt(ecg_id, model_response_data, model_name, gt_response_data['response'])
-                            response = model.generate_content(prompt, safety_settings=safety_settings)
-
-                            if not response.parts:
-                                raise ValueError("The model returned an empty response, likely due to a content filter.")
-
-                            score = self._parse_structured_response(response.text, ['accuracy', 'completeness'])
+                            response = client.chat.completions.create(
+                                model="deepseek-v4-pro",
+                                messages=[{"role": "user", "content": prompt}],
+                                max_tokens=2048,
+                            )
+                            response_text = response.choices[0].message.content
+                            if not response_text:
+                                raise ValueError("The model returned an empty response.")
+                            score = self._parse_structured_response(response_text, ['accuracy', 'completeness'])
                         except Exception as e:
                             logger.error(f"Error evaluating {model_name} on {ecg_id} for direct_response: {e}")
                             raw_response_text = str(response) if 'response' in locals() else "Response object not created."

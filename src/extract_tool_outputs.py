@@ -1,9 +1,11 @@
 import os
+import json
 import pandas as pd
 import numpy as np
 import argparse
 from tqdm import tqdm
-from medrax.tools.classification import ECGClassifierTool, ECGAnalysisTool
+from medrax.tools.classification import ECGClassifierTool, ECGAnalysisTool, ECGMorphologyTool
+from medrax.tools.signal_quality import ECGSignalQualityTool
 
 def process_ecg_files_to_csv(
     ecg_file_paths: list,
@@ -33,8 +35,12 @@ def process_ecg_files_to_csv(
             tool = ECGClassifierTool(model_path=model_path)
         elif tool_choice == 'measurements':
             tool = ECGAnalysisTool()
+        elif tool_choice == 'morphology':
+            tool = ECGMorphologyTool()
+        elif tool_choice == 'signal_quality':
+            tool = ECGSignalQualityTool()
         else:
-            print("Invalid tool choice. Please choose 'classification' or 'measurements'.")
+            print("Invalid tool choice. Choose 'classification', 'measurements', 'morphology', or 'signal_quality'.")
             return
     except Exception as e:
         print(f"Error initializing tool: {e}")
@@ -77,6 +83,39 @@ def process_ecg_files_to_csv(
                 else:
                     current_file_results["error"] = "Analysis Error"
 
+            elif tool_choice == 'morphology':
+                outputs = tool._run(ecg_path=ecg_path)
+                if outputs and "error" not in outputs and outputs.get("analysis_status") != "failed":
+                    # Flat convenience columns for quick filtering/inspection
+                    current_file_results["leads_used"] = ",".join(outputs.get("leads_used", []) or [])
+                    current_file_results["QRS_axis_deg"] = outputs.get("QRS_axis_deg", np.nan)
+                    current_file_results["axis_interpretation"] = outputs.get("axis_interpretation")
+                    current_file_results["beats_analyzed"] = outputs.get("beats_analyzed", np.nan)
+                    # Full per-lead morphology stored losslessly as a JSON column so the
+                    # nested ST/T/R/S dicts can be consumed later (training data / inference).
+                    morph = {k: outputs.get(k) for k in (
+                        "ST_deviation_mV", "T_amplitude_mV", "T_polarity",
+                        "R_amplitude_mV", "S_amplitude_mV", "RS_ratio",
+                        "QRS_axis_deg", "axis_interpretation")}
+                    current_file_results["morphology_json"] = json.dumps(morph, ensure_ascii=False)
+                else:
+                    current_file_results["error"] = "Analysis Error"
+
+            elif tool_choice == 'signal_quality':
+                outputs = tool._run(ecg_path=ecg_path)
+                if outputs and "error" not in outputs and outputs.get("analysis_status") != "failed":
+                    # Flat convenience columns
+                    current_file_results["overall_quality"] = outputs.get("overall_quality")
+                    current_file_results["acceptable_lead_count"] = outputs.get("acceptable_lead_count", np.nan)
+                    current_file_results["suspect_electrodes"] = ",".join(outputs.get("suspect_electrodes", []) or [])
+                    # Full per-lead verdicts + NeuroKit scores stored losslessly as JSON.
+                    sq = {k: outputs.get(k) for k in (
+                        "overall_quality", "acceptable_lead_count", "total_leads_assessed",
+                        "leads", "unacceptable_leads", "suspect_electrodes")}
+                    current_file_results["signal_quality_json"] = json.dumps(sq, ensure_ascii=False)
+                else:
+                    current_file_results["error"] = "Analysis Error"
+
         except Exception as e:
             # Capturing the error is good, but printing it in the loop can be messy.
             current_file_results["error"] = "Processing Exception"
@@ -106,14 +145,22 @@ Examples:
 
   # Run measurements (no model needed)
   python extract_tool_outputs.py --tool measurements --ecg_dir ./ecg_data --output_dir ./results
+
+  # Run morphology (no model needed) -> per-lead ST/T/R/S + QRS axis, full dict in morphology_json
+  python extract_tool_outputs.py --tool morphology --ecg_dir ./ecg_data --output_dir ./results
+
+  # Run signal_quality (no model needed) -> per-lead acceptable/unacceptable, full dict in signal_quality_json
+  python extract_tool_outputs.py --tool signal_quality --ecg_dir ./ecg_data --output_dir ./results
         """
     )
     parser.add_argument(
         "--tool",
         type=str,
         default="classification",
-        choices=['classification', 'measurements'],
-        help="The analysis tool to use: 'classification' (requires --model_path) or 'measurements'."
+        choices=['classification', 'measurements', 'morphology', 'signal_quality'],
+        help="The analysis tool to use: 'classification' (requires --model_path), "
+             "'measurements', 'morphology' (per-lead ST/T/R/S amplitudes + QRS axis), "
+             "or 'signal_quality' (per-lead recording-quality assessment)."
     )
     parser.add_argument(
         "--ecg_dir",
