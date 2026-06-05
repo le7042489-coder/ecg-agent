@@ -418,6 +418,344 @@ class ECGAnalysisTool(BaseTool):
         """
         return self._run(ecg_path)
 
+# Standard 12-lead order (matches ECGClassifierTool.get_lead_index ordering)
+LEAD_ORDER = ['i', 'ii', 'iii', 'avr', 'avl', 'avf', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6']
+
+# Leads reported in the per-lead morphology output by default: a clinically
+# representative set covering the main ST/T territories — inferior (II, aVF),
+# lateral (I, V5) and anteroseptal (V1, V2). V1 adds R/S-progression / RVH / RBBB
+# information; I and aVF are measured anyway to derive the frontal QRS axis, so
+# including them is essentially free. Kept identical for the live agent, the
+# offline cache and the training traces to avoid any train/deploy mismatch.
+DEFAULT_MORPHOLOGY_LEADS = ["I", "II", "aVF", "V1", "V2", "V5"]
+
+
+class ECGMorphologyTool(BaseTool):
+    """Tool that extracts quantitative, multi-lead ECG *morphology* from a raw 12-lead signal.
+
+    Unlike ECGAnalysisTool (which reports rhythm/interval measurements from Lead II only),
+    this tool quantifies waveform morphology across multiple leads:
+      - ST-segment deviation at J+60 ms, relative to the PR-segment baseline (mV)
+      - T-wave amplitude (mV) and polarity (positive / negative / flat)
+      - R-wave and S-wave amplitudes (mV) and the R/S ratio
+      - mean frontal-plane QRS axis (degrees), derived from leads I and aVF
+
+    Beat timing (QRS onset/offset = J point, T peaks) is taken once from the rhythm lead
+    using neurokit2's `ecg_delineate(method="dwt")` fiducials (the same delineation the
+    measurement tool uses); amplitudes are then measured per lead within those windows,
+    each relative to that beat's PR-segment baseline. Values are aggregated by median
+    across beats. Amplitudes assume the signal is in millivolts (PTB-XL / Lepod .mat).
+
+    IMPORTANT: this tool reports *quantitative measurements only* and does NOT make
+    abnormality / diagnostic determinations. ST/T abnormality classification (e.g. STE_,
+    STD_, INVT, QWAVE) is the responsibility of the classification tool (ecg_classifier).
+    """
+
+    name: str = "ecg_morphology"
+    description: str = (
+        "A tool that extracts quantitative 12-lead ECG morphology: ST-segment deviation "
+        "(measured at J+60ms vs the PR-segment baseline), T-wave amplitude and polarity, "
+        "R-wave and S-wave amplitudes, and the R/S ratio (reported per lead: "
+        "I/II/aVF/V1/V2/V5 by default), plus the mean frontal QRS axis in degrees "
+        "(from leads I and aVF). "
+        "Input is the path to an ECG .mat file. Amplitudes are in millivolts (mV). "
+        "Use this tool for questions about how tall/deep/deviated a specific waveform is "
+        "(e.g. 'how high is the T wave', 'how much ST deviation', 'what is the R-wave "
+        "amplitude', 'what is the QRS axis'). It does NOT diagnose: abnormality findings "
+        "such as ST elevation, T-wave inversion or pathological Q waves should come from "
+        "the classification tool."
+    )
+    args_schema: Type[BaseModel] = ECGInput
+    _device: Optional[str] = PrivateAttr(default="cpu")
+    _leads: List[str] = PrivateAttr()
+
+    def __init__(self, device: Optional[str] = "cpu", leads: Optional[List[str]] = None):
+        """Initialize the morphology tool.
+
+        Args:
+            device: Unused (kept for a uniform tool interface); analysis runs on CPU via neurokit2.
+            leads: Optional list of lead names (e.g. ["II","V2","V5"]) for the per-lead
+                morphology output. Defaults to DEFAULT_MORPHOLOGY_LEADS.
+        """
+        super().__init__()
+        self._device = device
+        self._leads = list(leads) if leads else list(DEFAULT_MORPHOLOGY_LEADS)
+
+    # ─── helpers ──────────────────────────────────────────────────────────────
+    @staticmethod
+    def _lead_index(lead: str) -> int:
+        """Map a lead name (case-insensitive) to its row index in the 12-lead array."""
+        return LEAD_ORDER.index(lead.lower())
+
+    @staticmethod
+    def _as_float_array(values) -> np.ndarray:
+        """Convert a neurokit delineation list (ints / None / nan) to a float ndarray."""
+        return np.array(values, dtype=np.float64) if values is not None else np.array([], dtype=np.float64)
+
+    @staticmethod
+    def _median_or_none(values, decimals: int = 3):
+        """Median over non-NaN values, rounded; returns None when nothing is measurable."""
+        arr = np.array(values, dtype=np.float64)
+        arr = arr[~np.isnan(arr)]
+        if arr.size == 0:
+            return None
+        return round(float(np.median(arr)), decimals)
+
+    @staticmethod
+    def _polarity(t_amp) -> str:
+        """Classify T-wave polarity from its (signed) amplitude in mV."""
+        if t_amp is None:
+            return "undetermined"
+        if t_amp > 0.10:
+            return "positive"
+        if t_amp < -0.10:
+            return "negative"
+        return "flat"
+
+    def _process_ecg_mat(self, ecg_path: str):
+        """Load (signal[12,N], sampling_rate) from a MAT file."""
+        ecg_data = scipy.io.loadmat(ecg_path)
+        signal = None
+        if "feats" in ecg_data:
+            signal = ecg_data["feats"]
+        else:
+            for key in ["data", "ECG", "signal", "val"]:
+                if key in ecg_data:
+                    signal = ecg_data[key]
+                    break
+        if signal is None:
+            raise ValueError(f"Could not find ECG data in MAT file: {ecg_path}")
+
+        fs = 500
+        if "curr_sample_rate" in ecg_data:
+            try:
+                fs = int(np.asarray(ecg_data["curr_sample_rate"]).flatten()[0])
+            except Exception:
+                fs = 500
+        return np.asarray(signal, dtype=np.float64), fs
+
+    def _delineate_rhythm(self, signal: np.ndarray, fs: int):
+        """Run cleaning → R-peak detection → dwt delineation on the rhythm lead.
+
+        Prefers Lead II (index 1), falling back to Lead I (index 0) if II is invalid.
+        Returns (rhythm_lead_name, rpeaks_dict, waves_dict) or raises on failure.
+        """
+        n_leads = signal.shape[0]
+        candidates = [(1, "II"), (0, "I")] if n_leads > 1 else [(0, "I")]
+
+        last_err = None
+        for idx, name in candidates:
+            if idx >= n_leads:
+                continue
+            lead = signal[idx, :]
+            if np.all(lead == 0) or np.all(np.isnan(lead)):
+                last_err = f"Lead {name} contains invalid data (all zeros or NaN)"
+                continue
+            try:
+                cleaned = nk.ecg_clean(lead, sampling_rate=fs, method="neurokit")
+                _, rpeaks_dict = nk.ecg_peaks(cleaned, sampling_rate=fs)
+                if len(rpeaks_dict.get("ECG_R_Peaks", [])) < 4:
+                    last_err = f"Too few R-peaks detected on Lead {name}"
+                    continue
+                _, waves_dict = nk.ecg_delineate(
+                    cleaned, rpeaks_dict, sampling_rate=fs, method="dwt"
+                )
+                return name, rpeaks_dict, waves_dict
+            except Exception as e:  # noqa: BLE001 - surface as a failed analysis
+                last_err = f"Delineation error on Lead {name}: {e}"
+                continue
+        raise RuntimeError(last_err or "Could not delineate any rhythm lead")
+
+    def _extract_morphology(self, signal: np.ndarray, fs: int) -> Dict[str, Any]:
+        """Compute per-lead morphology and the frontal QRS axis."""
+        n_leads, n_samples = signal.shape
+
+        rhythm_name, rpeaks_dict, waves = self._delineate_rhythm(signal, fs)
+
+        rpeaks = self._as_float_array(rpeaks_dict.get("ECG_R_Peaks"))
+        r_onsets = self._as_float_array(waves.get("ECG_R_Onsets"))
+        r_offsets = self._as_float_array(waves.get("ECG_R_Offsets"))
+        t_peaks = self._as_float_array(waves.get("ECG_T_Peaks"))
+
+        # window sizes (in samples) derived from the actual sampling rate
+        st_off = int(round(0.06 * fs))          # J+60 ms for ST deviation
+        base_w = int(round(0.04 * fs))          # 40 ms PR-segment baseline window
+        smooth = max(1, int(round(0.01 * fs)))  # ±10 ms smoothing for point measurements
+        t_lo = int(round(0.08 * fs))            # T search window start (J+80 ms)
+        t_hi = int(round(0.40 * fs))            # T search window end (J+400 ms)
+
+        # Always measure I and aVF (needed for the axis), plus the reported leads.
+        leads_to_measure = list(dict.fromkeys(self._leads + ["I", "aVF"]))
+        acc = {ln: {"ST": [], "T": [], "R": [], "S": [], "net": []} for ln in leads_to_measure}
+
+        n_beats = len(rpeaks)
+        beats_used = 0
+        for i in range(n_beats):
+            r_on = r_onsets[i] if i < len(r_onsets) else np.nan
+            r_off = r_offsets[i] if i < len(r_offsets) else np.nan
+            if np.isnan(r_on) or np.isnan(r_off):
+                continue
+            r_on, r_off = int(r_on), int(r_off)
+            if r_off <= r_on or r_on < 0 or r_off >= n_samples:
+                continue
+
+            b0 = max(0, r_on - base_w)
+            b1 = r_on
+            jp = r_off + st_off  # J point + 60 ms
+            tp = t_peaks[i] if i < len(t_peaks) else np.nan
+
+            beat_contributed = False
+            for ln in leads_to_measure:
+                li = self._lead_index(ln)
+                if li >= n_leads:
+                    continue
+                sig = signal[li, :]
+
+                baseline = np.nanmedian(sig[b0:b1]) if b1 > b0 else sig[r_on]
+                if np.isnan(baseline):
+                    continue
+
+                # R / S amplitudes within the QRS window (relative to PR baseline)
+                qrs = sig[r_on:r_off + 1] - baseline
+                if qrs.size and not np.all(np.isnan(qrs)):
+                    r_amp = np.nanmax(qrs)
+                    s_amp = np.nanmin(qrs)
+                    acc[ln]["R"].append(r_amp)
+                    acc[ln]["S"].append(s_amp)
+                    acc[ln]["net"].append(r_amp + s_amp)  # net QRS deflection for axis
+                    beat_contributed = True
+
+                # ST deviation at J+60 ms
+                if 0 <= jp - smooth and jp + smooth < n_samples:
+                    st_val = np.nanmedian(sig[jp - smooth:jp + smooth + 1]) - baseline
+                    if not np.isnan(st_val):
+                        acc[ln]["ST"].append(st_val)
+
+                # T-wave amplitude: use the delineated T peak when available,
+                # else the largest absolute deflection in the J+80..J+400 ms window.
+                t_val = np.nan
+                if not np.isnan(tp):
+                    tpi = int(tp)
+                    if 0 <= tpi < n_samples:
+                        t_val = np.nanmedian(sig[max(0, tpi - smooth):tpi + smooth + 1]) - baseline
+                else:
+                    w0 = r_off + t_lo
+                    w1 = min(n_samples, r_off + t_hi)
+                    if w1 > w0:
+                        seg = sig[w0:w1] - baseline
+                        if seg.size and not np.all(np.isnan(seg)):
+                            t_val = seg[int(np.nanargmax(np.abs(seg)))]
+                if not np.isnan(t_val):
+                    acc[ln]["T"].append(t_val)
+
+            if beat_contributed:
+                beats_used += 1
+
+        if beats_used == 0:
+            return {
+                "leads_used": self._leads,
+                "analysis_status": "partially_completed",
+                "note": "Could not locate usable QRS onset/offset fiducials; no morphology measured.",
+            }
+
+        # ─── aggregate per-lead (median across beats) ───────────────────────────
+        st_dev, t_amp, t_pol, r_amp_o, s_amp_o, rs_ratio = {}, {}, {}, {}, {}, {}
+        for ln in self._leads:
+            st_dev[ln] = self._median_or_none(acc[ln]["ST"])
+            t = self._median_or_none(acc[ln]["T"])
+            t_amp[ln] = t
+            t_pol[ln] = self._polarity(t)
+            r = self._median_or_none(acc[ln]["R"])
+            s = self._median_or_none(acc[ln]["S"])
+            r_amp_o[ln] = r
+            s_amp_o[ln] = s
+            rs_ratio[ln] = round(r / abs(s), 2) if (r is not None and s not in (None, 0) and abs(s) > 1e-6) else None
+
+        # ─── frontal QRS axis from net deflection in I and aVF ──────────────────
+        net_i = self._median_or_none(acc["I"]["net"]) if "I" in acc else None
+        net_avf = self._median_or_none(acc["aVF"]["net"]) if "aVF" in acc else None
+        if net_i is None or net_avf is None or (abs(net_i) < 1e-6 and abs(net_avf) < 1e-6):
+            qrs_axis = None
+            axis_interp = "Unable to determine"
+        else:
+            qrs_axis = int(round(math.degrees(math.atan2(net_avf, net_i))))
+            if -30 <= qrs_axis <= 90:
+                axis_interp = "Normal"
+            elif 90 < qrs_axis <= 180:
+                axis_interp = "Right axis deviation"
+            elif -90 <= qrs_axis < -30:
+                axis_interp = "Left axis deviation"
+            else:
+                axis_interp = "Extreme axis deviation"
+
+        return {
+            "leads_used": self._leads,
+            "rhythm_lead_for_timing": rhythm_name,
+            "sampling_rate": fs,
+            "beats_analyzed": beats_used,
+            "ST_deviation_mV": st_dev,
+            "T_amplitude_mV": t_amp,
+            "T_polarity": t_pol,
+            "R_amplitude_mV": r_amp_o,
+            "S_amplitude_mV": s_amp_o,
+            "RS_ratio": rs_ratio,
+            "QRS_axis_deg": qrs_axis,
+            "axis_interpretation": axis_interp,
+            "note": (
+                "Quantitative morphology only; no abnormality determination. ST/T "
+                "abnormalities should be confirmed with the classification tool. "
+                "Amplitudes in mV relative to the PR-segment baseline; ST measured at "
+                "J+60ms; S amplitude is the negative (downward) QRS deflection."
+            ),
+            "analysis_status": "completed",
+        }
+
+    def _run(
+        self,
+        ecg_path: str,
+        run_manager: Optional[CallbackManagerForToolRun] = None,
+    ) -> Dict[str, Any]:
+        """Extract quantitative multi-lead morphology from an ECG .mat file.
+
+        Args:
+            ecg_path: Absolute path to the ECG signal file (.mat format).
+            run_manager: Optional callback manager for the tool run.
+
+        Returns:
+            Dict[str, Any]: Per-lead ST/T/R/S amplitudes, R/S ratio, and the frontal QRS axis.
+        """
+        print(f"Using ECG file for morphology analysis: {ecg_path}")
+
+        if not os.path.exists(ecg_path):
+            return {
+                "error": f"ECG file not found: {ecg_path}",
+                "analysis_status": "failed",
+                "note": "Could not locate the specified ECG file",
+            }
+
+        try:
+            signal, fs = self._process_ecg_mat(ecg_path)
+            result = self._extract_morphology(signal, fs)
+            result["ecg_path"] = ecg_path
+            return result
+        except Exception as e:
+            traceback.print_exc()
+            return {
+                "error": str(e),
+                "ecg_path": ecg_path,
+                "analysis_status": "failed",
+                "note": f"Morphology analysis failed due to: {str(e)}",
+            }
+
+    async def _arun(
+        self,
+        ecg_path: str,
+        run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
+    ) -> Dict[str, Any]:
+        """Asynchronously extract morphology (delegates to the synchronous implementation)."""
+        return self._run(ecg_path)
+
+
 # SCP-ECG class labels for 12-lead ECG classification
 CLASS_LABELS = [
     '1AVB', '2AVB', '3AVB', 'ABQRS', 'AFIB', 'AFLT', 'ALMI', 'AMI', 'ANEUR', 'ASMI',
@@ -468,7 +806,10 @@ class ECGClassifierTool(BaseTool):
         # Initialize the model
         self._device = torch.device(device) if device and torch.cuda.is_available() else torch.device("cpu")
         try:
-            model, cfg, task = checkpoint_utils.load_model_and_task(model_path)
+            model, cfg, task = checkpoint_utils.load_model_and_task(
+                model_path,
+                model_overrides={"no_pretrained_weights": True},
+            )
             self._model = model
             self._model.eval()
             self._model = self._model.to(self._device)
