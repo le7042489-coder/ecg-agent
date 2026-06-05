@@ -6,6 +6,11 @@ MODIFIED to use a turn-by-turn training approach for better inference performanc
 
 import os
 os.environ['UNSLOTH_RETURN_LOGITS'] = '1'
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+import unsloth  # must precede trl / transformers / peft imports
+# Disable datasets multiprocessing to avoid pickle issues with Unsloth
+from datasets import config as datasets_config
+datasets_config.MAX_NUM_RUNNING_ASYNC_MAP_FUNCTIONS_IN_PARALLEL = 1
 import json
 import torch
 import argparse
@@ -13,7 +18,10 @@ from datasets import load_dataset, Dataset
 from transformers import TrainingArguments, EarlyStoppingCallback
 from trl import SFTTrainer, SFTConfig
 from unsloth import FastLanguageModel
-import wandb
+try:
+    import wandb
+except ImportError:
+    wandb = None
 
 # --- COPIED FROM SCRIPT 1: The instruction prompt is now part of the training data ---
 # This prompt will be treated as the "system" message for every training example.
@@ -152,6 +160,15 @@ def load_and_preprocess_dataset(tokenizer):
     print(f"Created test samples: {len(test_dataset)}")
     
     # Return all three datasets
+    # Pre-tokenize datasets to avoid multiprocessing pickle issues in SFTTrainer
+    print("Pre-tokenizing datasets...")
+    def tokenize_fn(examples):
+        return tokenizer(examples['text'], truncation=True, max_length=4096)
+    train_dataset = train_dataset.map(tokenize_fn, batched=True, batch_size=64, num_proc=1)
+    validation_dataset = validation_dataset.map(tokenize_fn, batched=True, batch_size=64, num_proc=1)
+    test_dataset = test_dataset.map(tokenize_fn, batched=True, batch_size=64, num_proc=1)
+    print("Pre-tokenization complete.")
+
     return train_dataset, validation_dataset, test_dataset
 
 
@@ -163,7 +180,7 @@ def setup_model_and_tokenizer(model_name="unsloth/llama-3-8b-Instruct-bnb-4bit",
         model_name=model_name,
         max_seq_length=max_seq_length,
         dtype=None,
-        load_in_4bit=False,
+        load_in_4bit=True,
     )
     
     FastLanguageModel.for_inference(model)
@@ -183,9 +200,9 @@ def setup_model_and_tokenizer(model_name="unsloth/llama-3-8b-Instruct-bnb-4bit",
 
 
 def setup_training_args(output_dir="./ecg-dialogue-finetuned"):
-    """Configure training arguments"""
-    return TrainingArguments(
-        per_device_train_batch_size=16,
+    """Configure training arguments. Optimized for 24GB+ VRAM GPUs."""
+    return SFTConfig(
+        per_device_train_batch_size=4,
         gradient_accumulation_steps=8,
         warmup_steps=10,
         num_train_epochs=3,  # Increase epochs since we'll stop early
@@ -199,13 +216,15 @@ def setup_training_args(output_dir="./ecg-dialogue-finetuned"):
         seed=42,
         output_dir=output_dir,
         eval_strategy="steps",      # Check validation loss during training
-        eval_steps=1000,                    # How often to check (e.g., every 20 steps)
+        eval_steps=100,                    # How often to check (e.g., every 20 steps)
         save_strategy="steps",            # Save strategy should match evaluation strategy
-        save_steps=1000,
+        save_steps=100,
         load_best_model_at_end=True,      # Load the best model when training ends
         metric_for_best_model="loss",     # Use validation loss to determine the best model
         save_total_limit=2,               # Save the best and the latest checkpoints
-        report_to="wandb" if 'WANDB_API_KEY' in os.environ else None,
+        dataset_num_proc=1,               # Single-process to avoid Unsloth pickle issues
+        dataset_kwargs={"skip_prepare_dataset": True},  # Skip internal tokenization
+        report_to="wandb" if 'WANDB_API_KEY' in os.environ else "none",
         run_name="ecg-dialogue-finetune-turn-by-turn")
 
 
@@ -216,12 +235,17 @@ def main(model_name=None, max_seq_length=4096, output_dir=None):
     if model_name is None: model_name = "unsloth/Llama-3.2-1B-Instruct"
     if output_dir is None: output_dir = "./ecg-dialogue-finetuned-turn-by-turn-1b-Instruct-0811"
     
-    if 'WANDB_API_KEY' in os.environ:
+    if wandb is not None and 'WANDB_API_KEY' in os.environ:
         model_short_name = model_name.split('/')[-1]
         wandb.init(project="ecg-dialogue-finetune", name=f"unsloth-{model_short_name}-turn-by-turn")
-    
+
     model, tokenizer = setup_model_and_tokenizer(model_name, max_seq_length)
-    
+
+    # Set special tokens on tokenizer directly (SFTConfig no longer accepts these)
+    tokenizer.eos_token = '<|eot_id|>'
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = '<|finetune_right_pad_id|>'
+
     # --- CHANGE THIS LINE ---
     # Capture all three datasets returned by the function
     train_dataset, validation_dataset, test_dataset = load_and_preprocess_dataset(tokenizer)
@@ -230,6 +254,7 @@ def main(model_name=None, max_seq_length=4096, output_dir=None):
     
     trainer = SFTTrainer(
         model=model,
+        processing_class=tokenizer,      # Pass tokenizer directly to avoid TokenizersBackend
         train_dataset=train_dataset,
         eval_dataset=validation_dataset, # Pass the validation set here
         args=training_args,
@@ -254,6 +279,25 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="unsloth/Llama-3.2-3B-Instruct", help="Model to fine-tune.")
     parser.add_argument("--max-seq-length", type=int, default=4096, help="Maximum sequence length")
     parser.add_argument("--output-dir", type=str, default="./ecg-dialogue-finetune/Llama-3.2-3B-Instruct", help="Output directory for the fine-tuned model")
+    parser.add_argument("--batch-size", type=int, default=None, help="Per-device batch size (default: auto)")
+    parser.add_argument("--grad-accum", type=int, default=None, help="Gradient accumulation steps (default: auto)")
+    parser.add_argument("--num-epochs", type=int, default=None, help="Number of training epochs (default: 3)")
 
     args = parser.parse_args()
+
+    # Allow CLI override of training hyperparameters
+    if args.batch_size is not None or args.grad_accum is not None or args.num_epochs is not None:
+        import types
+        original_setup = setup_training_args
+        def _custom_setup(output_dir):
+            sft_args = original_setup(output_dir)
+            if args.batch_size is not None:
+                sft_args.per_device_train_batch_size = args.batch_size
+            if args.grad_accum is not None:
+                sft_args.gradient_accumulation_steps = args.grad_accum
+            if args.num_epochs is not None:
+                sft_args.num_train_epochs = args.num_epochs
+            return sft_args
+        globals()['setup_training_args'] = _custom_setup
+
     main(args.model, args.max_seq_length, args.output_dir)

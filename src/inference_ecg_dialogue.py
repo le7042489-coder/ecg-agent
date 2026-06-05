@@ -63,14 +63,12 @@ def load_model_and_tokenizer(base_model_path, adapter_path):
     print(f"Loading base model from: {base_model_path}")
     print(f"Applying adapter from: {adapter_path}")
 
-    # Use bfloat16 if supported for better performance, otherwise float16
     dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 
-    # Load the base model
     model = AutoModelForCausalLM.from_pretrained(
         base_model_path,
         torch_dtype=dtype,
-        device_map="auto",  # Automatically distributes model across available GPUs
+        device_map="auto",
     )
 
     # Load the tokenizer from the adapter path (it's often saved there during fine-tuning)
@@ -107,10 +105,17 @@ def load_ground_truth_data():
         print(f"🛑 An error occurred while loading CSV files: {e}")
         sys.exit(1)
 
+def normalize_ecg_filename(name):
+    """Normalize HR00025.mat -> HR25.mat (strip leading zeros from numeric part)."""
+    import re
+    m = re.match(r'(HR)0*(\d+)(\.mat)', name)
+    return f"{m.group(1)}{m.group(2)}{m.group(3)}" if m else name
+
 def get_precomputed_tool_output(action, ecg_filename, gt_data):
     """Retrieves a pre-computed tool output from the loaded dataframes."""
     if not ecg_filename:
         return "[Error: ECG filename not provided]"
+    ecg_filename = normalize_ecg_filename(ecg_filename)
     try:
         if action == "call_classification_tool":
             df = gt_data["classification"]
@@ -132,7 +137,6 @@ def get_precomputed_tool_output(action, ecg_filename, gt_data):
                 "qtc_interval": f"{rec.get('QTc_ms'):.2f}" if pd.notna(rec.get('QTc_ms')) else None,
             }
             return json.dumps(measurements)
-            return "[]"
     except Exception:
         return f"[Error: Failed to retrieve data for {ecg_filename}]"
     return "[Error: Unknown tool action]"

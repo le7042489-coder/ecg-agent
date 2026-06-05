@@ -29,6 +29,7 @@ pandarallel==1.6.5
 peft==0.17.1
 Pillow==12.1.0
 protobuf==6.33.4
+py-ecg-detectors==1.3.5
 pyarrow==21.0.0
 pycocoevalcap==1.2
 pydantic==2.12.5

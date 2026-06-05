@@ -83,7 +83,8 @@ def set_seed(seed):
 def get_patient_id(file_path):
     """Extract patient_id from a .mat file."""
     data = scipy.io.loadmat(file_path)
-    return int(data['patient_id'][0][0])
+    pid = data['patient_id'].flatten()[0]
+    return int(float(pid))
 
 
 def get_sample_count(file_path):
