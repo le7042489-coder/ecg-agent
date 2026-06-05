@@ -11,6 +11,9 @@
 # Specific directories to exclude
 /inference/
 
+# Guideline retrieval: built index is a deploy artifact (ship via scp, don't commit)
+/src/medrax/guideline/index/
+
 # Optional: Add common Python ignores
 __pycache__/
 *.pyc
@@ -26,3 +29,23 @@ venv.bak/
 .vscode/
 wandb
 .claude
+
+# === Large data, datasets & regenerable artifacts (kept on disk, out of git) ===
+/data/
+/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3/
+/ptbxl_files
+*.tar.gz
+*.gguf
+
+# Evaluation outputs (regenerable by re-running eval)
+/results/
+
+# Vendored external repos (each has its own .git; clone separately)
+/fairseq-signals/
+/Time_is_not_Enough/
+
+# Unsloth build cache
+/unsloth_compiled_cache/
+
+# Saved conversation transcript (scratch note)
+/conversation1.md
