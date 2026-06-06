@@ -39,6 +39,7 @@
   .chip .pct{width:42px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
   .kv{font-size:13px;color:var(--fg)}.kv b{color:var(--accent2)}
   .q-ok{color:var(--accent)}.q-warn{color:var(--warn)}.q-bad{color:var(--bad)}
+  .term{border-bottom:1px dotted var(--muted);cursor:help}
   /* chat */
   #chat{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
   .msg{max-width:88%;padding:9px 12px;border-radius:12px;line-height:1.5;font-size:14px;white-space:pre-wrap;word-wrap:break-word}
@@ -178,14 +179,21 @@ function renderFindings(s){
     el.appendChild(card("QRS 电轴",
       `<div class="kv">电轴 <b>${mo.QRS_axis_deg}°</b> · ${esc(mo.axis_interpretation||"")}</div>`));
   }
-  // 信号质量
+  // 信号质量（导联=电极间算出的视角；电极=身上的物理传感器，两者不同，悬停看说明）
   const sq = s.signal_quality||{};
   if(sq.overall_quality){
     const ok = sq.acceptable_lead_count, tot = sq.total_leads_assessed;
     const cls2 = sq.overall_quality.includes("all_unacceptable")?"q-bad":
                  (ok===tot?"q-ok":"q-warn");
-    el.appendChild(card("信号质量",
-      `<div class="kv"><span class="${cls2}">${esc(sq.overall_quality)}</span> · 合格导联 ${ok}/${tot}</div>`));
+    let html = `<div class="kv"><span class="${cls2}">${esc(sq.overall_quality)}</span> · 合格`
+      + `<span class="term" title="导联 = 电极之间计算出的视角（I/II/V1…），共评 8 个独立导联">导联</span> ${ok}/${tot}</div>`;
+    const elec = sq.suspect_electrodes||[];
+    if(elec.length){
+      html += `<div class="kv" style="margin-top:5px">可疑`
+        + `<span class="term" title="电极 = 贴在身上的物理传感器（RA/LA/LL/V1…）；这是真正该去重贴或检查的对象">电极</span>`
+        + `（建议重贴/检查）：${elec.map(esc).join("、")}</div>`;
+    }
+    el.appendChild(card("信号质量", html));
   }
   // 指南
   if(s.guideline){ el.appendChild(card("相关指南", `<div class="kv">${esc(s.guideline)}</div>`)); }
