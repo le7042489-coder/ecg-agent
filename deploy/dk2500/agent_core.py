@@ -62,16 +62,22 @@ class BedsideAgent:
         # 1b. 可选指南检索器
         self._gretr = B.load_guideline_retriever(guideline_index) if guideline else None
 
-        # 2. 预算工具输出（缓存）
+        # 2. 预算工具输出（缓存），并打印一遍便于 CLI 启动时/服务端日志查看
         print("[core] 预计算工具输出...")
         self.cached_classification = B.run_classification(self.classifier, mat_path)
+        print(f"  分类: {self.cached_classification}")
         self.cached_measurement = B.run_measurement(self.analyzer, mat_path)
+        print(f"  测量: {self.cached_measurement}")
         self.cached_morphology = B.run_morphology(self.morphology, mat_path)
+        print(f"  形态学: {self.cached_morphology}")
         self.cached_signal_quality = B.run_signal_quality(self.signal_quality, mat_path)
+        print(f"  信号质量: {self.cached_signal_quality}")
         self.cached_guideline = (
             B.guideline_context(self._gretr, self.cached_classification)
             if self._gretr is not None else ""
         )
+        if self.cached_guideline:
+            print(f"  指南: {self.cached_guideline}")
 
         # 3. LLM + 后端 token 迭代器
         print("[core] 加载 LLM...")

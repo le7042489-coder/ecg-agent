@@ -280,6 +280,27 @@ python lepod2mat.py ~/workspace/ecg_20260527_143022.csv
 # 输出: ~/workspace/ecg_20260527_143022.mat
 ```
 
+### 场景 5：网页界面（推荐演示/床旁）
+
+```bash
+# 起本机网页服务（数据源参数与 CLI 一致：--mat / --ecg / --live）
+python web_server.py --mat /path/to/ecg.mat \
+  --backend llama-cpp --gguf ~/workspace/ECG-Agent/ecg_agent_llama3b_q4km.gguf
+# 然后在 DK-2500 上用 Firefox 打开 http://127.0.0.1:8000
+```
+
+界面三块：**12 导联波形** + **分析发现面板**（分类/测量/电轴/信号质量）+ **流式问答**（逐字显示）。
+
+- 想从**另一台机器**（如笔记本）访问：加 `--host 0.0.0.0`，浏览器开 `http://<DK-2500_IP>:8000`。
+- 端口默认 8000，可用 `--port` 改；transformers 后端同理（`--backend transformers`，不需 `--gguf`）。
+- 纯标准库实现（`http.server` + SSE），无额外依赖、可离线运行，无需联网取 CDN。
+
+**语音（后期，已留钩子）**：
+- 🔊「朗读回答」走浏览器 TTS——装上 `speech-dispatcher` 语音并接扬声器后即出声，无需改代码。
+- 🎤 麦克风暂禁用：Firefox **无离线语音识别**，需后期接**服务端 STT**（如 whisper.cpp）到 `web_server.py` 的 `/api/stt` 占位路由。
+
+> CLI 与网页共用同一套核心（`agent_core.py`），回答逻辑完全一致。
+
 ### 典型对话示例
 
 ```
@@ -313,8 +334,13 @@ ECG-Agent: You're welcome! Take care and feel free to ask if you have any other 
 ~/workspace/ECG-Agent/
 ├── dk2500_deploy/                     ← 本目录
 │   ├── setup_dk2500.sh               一键安装脚本
-│   ├── bedside_agent.py              主程序入口
+│   ├── bedside_agent.py              CLI 入口
+│   ├── agent_core.py                 可复用核心（CLI/网页共用）
+│   ├── web_server.py                 网页服务（http.server + SSE）
+│   ├── web/index.html               网页界面（单文件，离线）
 │   ├── lepod2mat.py                  数据格式转换器
+│   ├── test_streaming.py            门控/转圈单测
+│   ├── test_agent_core.py           编排单测
 │   └── DK-2500_ECG-Agent_部署指南.md 本文件
 ├── checkpoints/
 │   └── checkpoint_best.pt            分类工具权重 (1.1 GB)

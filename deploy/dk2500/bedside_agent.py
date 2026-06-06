@@ -189,37 +189,6 @@ def iter_llamacpp(llm, messages: list):
             yield delta
 
 
-def generate_transformers_stream(model, tokenizer, gen_config, messages: list, on_token=None) -> str:
-    """流式生成（transformers 后端）：逐 token 调 on_token，并累积返回完整字符串
-    （供 parse_response 解析 Action/Thought/Content）。"""
-    full = []
-    for text in iter_transformers(model, tokenizer, gen_config, messages):
-        full.append(text)
-        if on_token:
-            on_token(text)
-    return "".join(full).strip()
-
-
-def generate_llamacpp_stream(llm, messages: list, on_token=None) -> str:
-    """流式生成（llama-cpp 后端）：逐 delta 调 on_token，并累积返回完整字符串。"""
-    full = []
-    for delta in iter_llamacpp(llm, messages):
-        full.append(delta)
-        if on_token:
-            on_token(delta)
-    return "".join(full).strip()
-
-
-def generate_transformers(model, tokenizer, gen_config, messages: list) -> str:
-    """非流式封装：消费流式生成后返回完整字符串。"""
-    return generate_transformers_stream(model, tokenizer, gen_config, messages, on_token=None)
-
-
-def generate_llamacpp(llm, messages: list) -> str:
-    """非流式封装：消费流式生成后返回完整字符串。"""
-    return generate_llamacpp_stream(llm, messages, on_token=None)
-
-
 # ─── ECG 工具（现算模式）────────────────────────────────────────────────────
 
 def load_tools(checkpoint_path: str):
@@ -408,7 +377,7 @@ class ContentGate:
       - Action / Thought 脚手架 → 不输出；
       - 检测到 tool-call 类 Action → 整段静默（该次无 Content，交给工具+二次生成）；
       - 越过 `Content:` 标记后 → 返回其后的正文，首段去掉前导空白/换行。
-    UI 无关：CLI（ContentStreamer）与网页（agent_core）共用此门控，单一事实源。
+    UI 无关：CLI 与网页都经 agent_core.ask_stream 复用此门控，单一事实源。
     完整原文经 full_text() 取回，交 parse_response 维护对话历史。
     """
 
@@ -455,42 +424,6 @@ class ContentGate:
         return "".join(self._raw)
 
 
-class ContentStreamer:
-    """ContentGate 的 CLI 适配：把过滤出的应答正文实时打印到终端。
-
-    首个非空正文出现时才打印前缀（避免无内容时留下空的「ECG-Agent: 」），并在此刻
-    回调 on_first（用于停掉等待转圈并清行）。enabled=False 时全程静默（用于
-    --force-action 调试路径的首次生成）。
-    """
-
-    def __init__(self, prefix="ECG-Agent: ", enabled=True, out=None, on_first=None):
-        self.prefix = prefix
-        self.enabled = enabled
-        self.out = out if out is not None else sys.stdout
-        self.on_first = on_first
-        self.gate = ContentGate()
-        self.started = False      # 已实际显示过应答正文
-
-    def feed(self, token: str):
-        if not self.enabled:
-            return
-        chunk = self.gate.feed(token)
-        if not chunk:
-            return
-        if not self.started:
-            if self.on_first is not None:
-                self.on_first()   # 先停转圈并清行，再打印应答（避免争抢同一行）
-            self.out.write(self.prefix)
-            self.started = True
-        self.out.write(chunk)
-        self.out.flush()
-
-    def finish(self):
-        if self.started:
-            self.out.write("\n\n")
-            self.out.flush()
-
-
 # ─── 等待动画：模型「思考/prompt-eval」静默期给用户反馈 ───────────────────────
 
 class Spinner:
@@ -498,8 +431,8 @@ class Spinner:
     no-op（不画、不清行），避免污染日志。
 
     start() 起一个后台线程持续刷新同一行；stop() 幂等——停止后台线程并清行。
-    与 ContentStreamer 配合：应答首字到达前调用 stop()（join 掉后台线程后再清行），
-    确保转圈线程先停，再由主线程打印应答，二者不会争抢同一行。
+    CLI 主循环在应答首字到达时调用 stop()（join 掉后台线程后再清行），确保转圈线程
+    先停、再由主线程打印应答，二者不会争抢同一行。
     """
 
     _FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
@@ -552,65 +485,16 @@ class Spinner:
 # ─── 主对话循环 ───────────────────────────────────────────────────────────────
 
 def run_bedside_session(mat_path: str, backend: str, args):
-    # 1. 加载工具
-    classifier, analyzer, morphology, signal_quality = load_tools(str(CHECKPOINT_PATH))
-
-    # 1b.（可选）版本化指南检索器，用于基于分类发现的自动 grounding（默认关闭）
-    gretr = (load_guideline_retriever(getattr(args, "guideline_index", None))
-             if getattr(args, "guideline", False) else None)
-
-    # 2. 预计算工具输出（避免对话过程中重复推理）
-    print("\n[Agent] 预计算分类结果...")
-    cached_classification = run_classification(classifier, mat_path)
-    print(f"  分类结果: {cached_classification}")
-
-    print("[Agent] 预计算测量结果...")
-    cached_measurement = run_measurement(analyzer, mat_path)
-    print(f"  测量结果: {cached_measurement}")
-
-    print("[Agent] 预计算形态学结果...")
-    cached_morphology = run_morphology(morphology, mat_path)
-    print(f"  形态学结果: {cached_morphology}")
-
-    print("[Agent] 预计算信号质量结果...")
-    cached_signal_quality = run_signal_quality(signal_quality, mat_path)
-    print(f"  信号质量结果: {cached_signal_quality}")
-
-    # 基于分类发现预检索相关指南（仅当 --guideline 开启；空串表示不注入）
-    cached_guideline = ""
-    if gretr is not None:
-        print("[Agent] 预检索相关指南（基于分类发现）...")
-        cached_guideline = guideline_context(gretr, cached_classification)
-        print(f"  指南上下文: {cached_guideline or '（无命中）'}")
-
-    # 3. 加载 LLM
-    print("\n[Agent] 加载 LLM（首次加载较慢，请稍候）...")
-    if backend == "llama-cpp":
-        llm = load_llm_llamacpp(args.gguf)
-        stream_generate = lambda msgs, on_token: generate_llamacpp_stream(llm, msgs, on_token)
-    else:
-        model, tokenizer, gen_config = load_llm_transformers(
-            args.base_model, str(ADAPTER_PATH)
-        )
-        stream_generate = lambda msgs, on_token: generate_transformers_stream(
-            model, tokenizer, gen_config, msgs, on_token
-        )
-
-    def gen_streamed(msgs, live=True, spinner=None):
-        """流式生成并实时显示最终应答；返回 (完整原文, 是否已显示内容)。
-
-        live=False 时全程静默——仅用于 --force-action 调试路径的首次生成：
-        该次输出可能被强制 action 覆盖，提前显示会与二次生成重复。
-        spinner：传入则在首个应答字符到达前 stop()（清除等待转圈行）。
-        """
-        printer = ContentStreamer(prefix="ECG-Agent: ", enabled=live,
-                                  on_first=(spinner.stop if spinner is not None else None))
-        raw = stream_generate(msgs, printer.feed)
-        printer.finish()
-        return raw, printer.started
-
-    # 4. 对话循环
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    # 复用核心：加载工具/预算/LLM 一次；工具路由编排只此一份（见 agent_core.ask_stream）。
+    from agent_core import BedsideAgent
+    agent = BedsideAgent(
+        mat_path, backend=backend, gguf=args.gguf, base_model=args.base_model,
+        guideline=getattr(args, "guideline", False),
+        guideline_index=getattr(args, "guideline_index", None),
+        force_action=getattr(args, "force_action", None),
+    )
+    if getattr(args, "force_action", None):
+        print(f"[force-action] 已启用：每轮强制 action = {args.force_action}")
 
     print("\n" + "="*60)
     print("ECG-Agent 已就绪。输入问题开始对话，输入 'exit' 退出。")
@@ -629,83 +513,30 @@ def run_bedside_session(mat_path: str, backend: str, args):
             print("ECG-Agent: 感谢使用，再见！")
             break
 
-        messages.append({"role": "user", "content": user_input})
-
-        # 本轮等待动画：从用户回车起转圈，应答首字到达时由 ContentStreamer 清除。
-        # 工具问答跨 gen-1(静默)+工具+gen-2，spinner 一路转到答案首字；直接应答转到 gen-1 首字。
+        # 等待动画：回车起转圈，应答首字到达即停并清行。编排/工具路由在 agent.ask_stream。
         print()  # 与上一轮之间留一空行
         spinner = Spinner("正在分析…")
         spinner.start()
+        first = True
         try:
-            # LLM 第一次生成（决定 action）。直接应答（response 等）会在此流式显示；
-            # 工具调用类 action 不含 Content:，本次静默，留待二次生成。
-            # --force-action 时本次完全静默（live=False），避免被强制覆盖后重复输出。
-            raw, shown = gen_streamed(messages, spinner=spinner,
-                                      live=(getattr(args, "force_action", None) is None))
-            parsed = parse_response(raw)
-            action = parsed["action"]
-
-            # 临时验证 hack（重训前）：强制 action，验证工具+接线+输出格式跑通。
-            # 模型尚未在 call_morphology_tool 上训练，靠它自主选择不可靠，故先手动强制。
-            # 重训并把新 action 写入 system prompt 后，删除此分支即可。
-            if getattr(args, "force_action", None):
-                spinner.stop()  # 调试信息要占整行，先停转圈
-                print(f"[force-action] 强制 action = {args.force_action}（覆盖模型输出 '{action}'）")
-                action = args.force_action
-
-            if action in ("call_classification_tool", "call_measurement_tool",
-                          "call_morphology_tool", "call_signal_quality_tool"):
-                # 使用预计算结果
-                tool_output = {
-                    "call_classification_tool": cached_classification,
-                    "call_measurement_tool": cached_measurement,
-                    "call_morphology_tool": cached_morphology,
-                    "call_signal_quality_tool": cached_signal_quality,
-                }[action]
-                # 自动 grounding：把相关指南并入分类工具输出，让应答 turn 一并阅读
-                #（走 Tool_Output 通道，与微调训练格式一致；默认关闭，见 --guideline）
-                if action == "call_classification_tool" and cached_guideline:
-                    tool_output = f"{tool_output}\n{cached_guideline}"
-                tool_turn = {
-                    "role": "assistant",
-                    "action": action,
-                    "thought": parsed["thought"],
-                    "tool_output": tool_output,
-                }
-                messages.append({"role": "assistant", "content": format_assistant_turn(tool_turn)})
-
-                # LLM 第二次生成（基于工具输出作答）——流式显示给用户
-                raw2, shown2 = gen_streamed(messages, live=True, spinner=spinner)
-                parsed2 = parse_response(raw2)
-                response_turn = {
-                    "role": "assistant",
-                    "action": parsed2.get("action", "response"),
-                    "thought": parsed2.get("thought", ""),
-                    "content": parsed2["content"] or raw2,  # 缺 Content: 时回退整段
-                }
-                messages.append({"role": "assistant", "content": format_assistant_turn(response_turn)})
-                # 流式已实时打印；仅当未显示（输出缺 Content: 等异常）才回退整段打印
-                if not shown2:
+            for chunk in agent.ask_stream(user_input):
+                if first:
                     spinner.stop()
-                    print(f"ECG-Agent: {response_turn['content']}\n")
-            else:
-                # 直接回复（response / response_followup / system_bye / response_fail）
-                direct_turn = {
-                    "role": "assistant",
-                    "action": action,
-                    "thought": parsed["thought"],
-                    "content": parsed["content"] or raw,  # 缺 Content: 时回退整段
-                }
-                messages.append({"role": "assistant", "content": format_assistant_turn(direct_turn)})
-                # 首次生成已流式打印；仅当未显示（被 --force-action 静默或缺 Content:）才回退
-                if not shown:
-                    spinner.stop()
-                    print(f"ECG-Agent: {direct_turn['content']}\n")
-
-                if action == "system_bye":
-                    break
+                    sys.stdout.write("ECG-Agent: ")
+                    first = False
+                sys.stdout.write(chunk)
+                sys.stdout.flush()
+        except Exception as e:
+            spinner.stop()
+            sys.stdout.write(f"{'ECG-Agent: ' if first else ''}[错误] {e}")
+            first = False
         finally:
-            spinner.stop()  # 确保任何路径（含异常/break）都清除转圈
+            spinner.stop()  # 确保任何路径（含异常）都清除转圈
+        sys.stdout.write("\n\n")
+        sys.stdout.flush()
+
+        if agent.last_action == "system_bye":
+            break
 
 
 # ─── 入口 ─────────────────────────────────────────────────────────────────────
