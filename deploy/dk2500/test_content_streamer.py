@@ -137,6 +137,18 @@ def main():
     sp2.start(); time.sleep(0.03); sp2.stop()
     check("14 spinner noop when not tty", ft2.getvalue() == "", repr(ft2.getvalue()))
 
+    # 15) ContentGate：直接应答返回正文、full_text 完整
+    g = B.ContentGate()
+    out = "".join(g.feed(t) for t in ["Action: response\n", "Thought: x\n", "Content: ", "Hi ", "there"])
+    check("15 gate content", out == "Hi there" and g.started and not g.suppressed, repr(out))
+    check("15 gate full_text",
+          g.full_text() == "Action: response\nThought: x\nContent: Hi there", repr(g.full_text()))
+
+    # 16) ContentGate：tool-call 全程返回空且 suppressed
+    g = B.ContentGate()
+    out = "".join(g.feed(t) for t in ["Action: call_morphology_tool\n", "Thought: m\n"])
+    check("16 gate tool suppress", out == "" and g.suppressed and not g.started, repr(out))
+
     print()
     print("ALL PASS" if not _fails else f"{len(_fails)} FAILED: {_fails}")
     return 1 if _fails else 0

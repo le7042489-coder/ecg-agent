@@ -153,12 +153,8 @@ def load_llm_llamacpp(gguf_path: str):
     return llm
 
 
-def generate_transformers_stream(model, tokenizer, gen_config, messages: list, on_token=None) -> str:
-    """流式生成（transformers 后端）。
-
-    逐 token 产出：每段新文本调用 on_token(text)，同时累积并返回完整字符串
-    （供 parse_response 解析 Action/Thought/Content）。
-    """
+def iter_transformers(model, tokenizer, gen_config, messages: list):
+    """流式生成原始 token（transformers 后端）——逐段 yield 文本。"""
     from transformers import TextIteratorStreamer
     from threading import Thread
 
@@ -173,19 +169,15 @@ def generate_transformers_stream(model, tokenizer, gen_config, messages: list, o
 
     thread = Thread(target=_run_generate)
     thread.start()
-
-    full = []
-    for text in streamer:
-        full.append(text)
-        if on_token:
-            on_token(text)
-    thread.join()
-    return "".join(full).strip()
+    try:
+        for text in streamer:
+            yield text
+    finally:
+        thread.join()
 
 
-def generate_llamacpp_stream(llm, messages: list, on_token=None) -> str:
-    """流式生成（llama-cpp 后端）。逐 delta 产出并累积返回完整字符串。"""
-    full = []
+def iter_llamacpp(llm, messages: list):
+    """流式生成原始 token（llama-cpp 后端）——逐 delta yield 文本。"""
     for chunk in llm.create_chat_completion(
         messages=messages,
         max_tokens=512,
@@ -194,9 +186,27 @@ def generate_llamacpp_stream(llm, messages: list, on_token=None) -> str:
     ):
         delta = chunk["choices"][0]["delta"].get("content")
         if delta:
-            full.append(delta)
-            if on_token:
-                on_token(delta)
+            yield delta
+
+
+def generate_transformers_stream(model, tokenizer, gen_config, messages: list, on_token=None) -> str:
+    """流式生成（transformers 后端）：逐 token 调 on_token，并累积返回完整字符串
+    （供 parse_response 解析 Action/Thought/Content）。"""
+    full = []
+    for text in iter_transformers(model, tokenizer, gen_config, messages):
+        full.append(text)
+        if on_token:
+            on_token(text)
+    return "".join(full).strip()
+
+
+def generate_llamacpp_stream(llm, messages: list, on_token=None) -> str:
+    """流式生成（llama-cpp 后端）：逐 delta 调 on_token，并累积返回完整字符串。"""
+    full = []
+    for delta in iter_llamacpp(llm, messages):
+        full.append(delta)
+        if on_token:
+            on_token(delta)
     return "".join(full).strip()
 
 
@@ -388,20 +398,18 @@ def format_assistant_turn(turn: dict) -> str:
     return s.strip()
 
 
-# ─── 流式显示：只把最终应答（Content: 之后）实时打印给用户 ────────────────────
+# ─── 流式显示门控：从结构化输出抽出「给用户看的应答」(Content: 之后) ───────────
 
-class ContentStreamer:
-    """在流式生成过程中，只把「给用户看的最终应答」实时打印出来。
+class ContentGate:
+    """把模型结构化输出（Action/Thought/Content）的 token 流，过滤成「只剩给用户
+    看的应答正文」。逐 token 调 feed()，返回本次应输出的正文片段（可能为空串）。
 
-    模型输出是结构化的 Action/Thought/Content 文本——只有 `Content:` 之后的内容
-    才是给用户的回答。本类在 token 流上：
-      - 跳过 Action / Thought 脚手架（不显示）；
-      - 检测到 tool-call 类 Action 时整段静默（该次没有 Content，交给工具+二次生成）；
-      - 越过 `Content:` 标记后逐 token 实时打印；首个非空字符出现时才打印前缀，
-        避免在无内容时留下一个空的「ECG-Agent: 」。
-    `enabled=False` 时全程静默（用于 --force-action 调试路径的首次生成）。
-
-    只负责「显示」；完整原文仍由调用方交给 parse_response 解析，数据流不受影响。
+    规则：
+      - Action / Thought 脚手架 → 不输出；
+      - 检测到 tool-call 类 Action → 整段静默（该次无 Content，交给工具+二次生成）；
+      - 越过 `Content:` 标记后 → 返回其后的正文，首段去掉前导空白/换行。
+    UI 无关：CLI（ContentStreamer）与网页（agent_core）共用此门控，单一事实源。
+    完整原文经 full_text() 取回，交 parse_response 维护对话历史。
     """
 
     _ACTION = re.compile(r"(?im)^[ \t]*\[?[ \t]*Action[ \t]*[:\-][ \t]*([A-Za-z_]+)")
@@ -411,42 +419,70 @@ class ContentStreamer:
         "call_morphology_tool", "call_signal_quality_tool",
     }
 
-    def __init__(self, prefix="ECG-Agent: ", enabled=True, out=None, on_first=None):
-        self.prefix = prefix
-        self.enabled = enabled
-        self.out = out if out is not None else sys.stdout
-        self.on_first = on_first  # 首个应答字符到达前调用（用于停掉等待转圈并清行）
+    def __init__(self):
+        self._raw = []
         self.buf = ""
-        self.in_content = False   # 已越过 Content: 标记，后续 token 直接打印
-        self.started = False      # 已打印过至少一个非空字符（真正显示了内容）
-        self.suppressed = False   # 检测到 tool-call，本段不显示
+        self.in_content = False   # 已越过 Content: 标记
+        self.started = False      # 已返回过至少一个非空正文片段
+        self.suppressed = False   # 检测到 tool-call，本段静默
 
-    def feed(self, token: str):
-        if not self.enabled or self.suppressed:
-            return
+    def feed(self, token: str) -> str:
+        self._raw.append(token)
+        if self.suppressed:
+            return ""
         if self.in_content:
-            self._emit(token)
-            return
+            return self._first_strip(token)
         self.buf += token
         am = self._ACTION.search(self.buf)
         if am and am.group(1) in self._TOOL_ACTIONS:
             self.suppressed = True
-            return
+            return ""
         cm = self._CONTENT.search(self.buf)
         if cm:
             self.in_content = True
-            self._emit(self.buf[cm.end():])
+            return self._first_strip(self.buf[cm.end():])
+        return ""
 
-    def _emit(self, text: str):
+    def _first_strip(self, text: str) -> str:
         if not self.started:
             text = text.lstrip()      # 跳过 Content: 后的前导空白/换行
             if not text:
-                return
+                return ""
+            self.started = True
+        return text
+
+    def full_text(self) -> str:
+        return "".join(self._raw)
+
+
+class ContentStreamer:
+    """ContentGate 的 CLI 适配：把过滤出的应答正文实时打印到终端。
+
+    首个非空正文出现时才打印前缀（避免无内容时留下空的「ECG-Agent: 」），并在此刻
+    回调 on_first（用于停掉等待转圈并清行）。enabled=False 时全程静默（用于
+    --force-action 调试路径的首次生成）。
+    """
+
+    def __init__(self, prefix="ECG-Agent: ", enabled=True, out=None, on_first=None):
+        self.prefix = prefix
+        self.enabled = enabled
+        self.out = out if out is not None else sys.stdout
+        self.on_first = on_first
+        self.gate = ContentGate()
+        self.started = False      # 已实际显示过应答正文
+
+    def feed(self, token: str):
+        if not self.enabled:
+            return
+        chunk = self.gate.feed(token)
+        if not chunk:
+            return
+        if not self.started:
             if self.on_first is not None:
-                self.on_first()       # 先停掉等待转圈并清行，再打印应答（避免争抢同一行）
+                self.on_first()   # 先停转圈并清行，再打印应答（避免争抢同一行）
             self.out.write(self.prefix)
             self.started = True
-        self.out.write(text)
+        self.out.write(chunk)
         self.out.flush()
 
     def finish(self):
@@ -645,7 +681,7 @@ def run_bedside_session(mat_path: str, backend: str, args):
                     "role": "assistant",
                     "action": parsed2.get("action", "response"),
                     "thought": parsed2.get("thought", ""),
-                    "content": parsed2.get("content", raw2),
+                    "content": parsed2["content"] or raw2,  # 缺 Content: 时回退整段
                 }
                 messages.append({"role": "assistant", "content": format_assistant_turn(response_turn)})
                 # 流式已实时打印；仅当未显示（输出缺 Content: 等异常）才回退整段打印
@@ -658,7 +694,7 @@ def run_bedside_session(mat_path: str, backend: str, args):
                     "role": "assistant",
                     "action": action,
                     "thought": parsed["thought"],
-                    "content": parsed.get("content", raw),
+                    "content": parsed["content"] or raw,  # 缺 Content: 时回退整段
                 }
                 messages.append({"role": "assistant", "content": format_assistant_turn(direct_turn)})
                 # 首次生成已流式打印；仅当未显示（被 --force-action 静默或缺 Content:）才回退

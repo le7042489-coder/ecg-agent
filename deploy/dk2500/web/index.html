@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECG-Agent · 床旁</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --line:#2a313c;
+    --fg:#e6edf3; --muted:#9aa7b4; --accent:#3fb950; --accent2:#58a6ff;
+    --warn:#d29922; --bad:#f85149; --grid:#3a2030; --trace:#7ee787;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,"Noto Sans CJK SC",sans-serif;background:var(--bg);color:var(--fg);height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:16px;margin:0;font-weight:600}
+  header .file{color:var(--muted);font-size:13px}
+  header .dot{width:9px;height:9px;border-radius:50%;background:var(--bad);box-shadow:0 0 6px var(--bad)}
+  header .dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent)}
+  main{flex:1;display:flex;min-height:0}
+  .left{flex:1.25;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
+  .right{flex:1;display:flex;flex-direction:column;min-width:340px}
+  .pane-title{font-size:12px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  /* 波形 */
+  #ecgWrap{flex:1.1;overflow:auto;background:#10070c}
+  #ecg{display:block;width:100%}
+  /* findings */
+  #findings{flex:1;overflow:auto;padding:10px 14px;background:var(--panel)}
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .card h3{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.03em}
+  .meas{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .meas .m{background:#0e1420;border:1px solid var(--line);border-radius:6px;padding:6px 8px;text-align:center}
+  .meas .m b{display:block;font-size:18px}
+  .meas .m span{font-size:11px;color:var(--muted)}
+  .chip{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px}
+  .chip .lab{width:64px;flex:none;color:var(--fg)}
+  .chip .bar{flex:1;height:8px;background:#0e1420;border-radius:4px;overflow:hidden}
+  .chip .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .chip .pct{width:42px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  .kv{font-size:13px;color:var(--fg)}.kv b{color:var(--accent2)}
+  .q-ok{color:var(--accent)}.q-warn{color:var(--warn)}.q-bad{color:var(--bad)}
+  /* chat */
+  #chat{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+  .msg{max-width:88%;padding:9px 12px;border-radius:12px;line-height:1.5;font-size:14px;white-space:pre-wrap;word-wrap:break-word}
+  .msg.user{align-self:flex-end;background:#1f6feb33;border:1px solid #1f6feb55}
+  .msg.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--line)}
+  .msg.bot.think{color:var(--muted);font-style:italic}
+  .composer{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--panel)}
+  .composer input[type=text]{flex:1;background:#0e1420;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:14px;outline:none}
+  .composer input[type=text]:focus{border-color:var(--accent2)}
+  button{background:var(--accent);color:#06210d;border:0;border-radius:8px;padding:0 14px;font-size:14px;font-weight:600;cursor:pointer}
+  button:disabled{background:#30363d;color:var(--muted);cursor:not-allowed}
+  .iconbtn{background:#30363d;color:var(--fg);font-weight:400}
+  .opts{display:flex;align-items:center;gap:14px;padding:6px 12px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted)}
+  .opts label{display:flex;align-items:center;gap:5px;cursor:pointer}
+  .disclaimer{font-size:11px;color:var(--warn)}
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="statusDot"></span>
+  <h1>ECG-Agent · 床旁</h1>
+  <span class="file" id="ecgFile">加载中…</span>
+</header>
+<main>
+  <section class="left">
+    <div class="pane-title">12 导联波形</div>
+    <div id="ecgWrap"><canvas id="ecg"></canvas></div>
+    <div class="pane-title">分析发现</div>
+    <div id="findings"><div class="card">加载中…</div></div>
+  </section>
+  <section class="right">
+    <div class="pane-title">问答（围绕这段心电图）</div>
+    <div id="chat"></div>
+    <div class="opts">
+      <label><input type="checkbox" id="ttsToggle"> 🔊 朗读回答</label>
+      <span class="disclaimer">仅供比赛演示，非医疗诊断</span>
+    </div>
+    <div class="composer">
+      <button class="iconbtn" id="micBtn" title="需要服务端语音识别 + 麦克风，后期接入（Firefox 无离线 STT）" disabled>🎤</button>
+      <input type="text" id="q" placeholder="例如：我的心率正常吗？" autocomplete="off">
+      <button id="sendBtn">发送</button>
+    </div>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = (s)=>document.querySelector(s);
+let busy = false;
+
+// ── 初始化：拉波形 + findings ────────────────────────────────────────────────
+async function init(){
+  try{
+    const r = await fetch("/api/ecg");
+    const d = await r.json();
+    if(d.error){ $("#ecgFile").textContent = d.error; return; }
+    $("#ecgFile").textContent = d.ecg_file || "";
+    $("#statusDot").classList.add("ok");
+    drawECG(d.waveform);
+    renderFindings(d.summary);
+    window.addEventListener("resize", ()=>drawECG(d.waveform));
+  }catch(e){ $("#ecgFile").textContent = "加载失败: "+e; }
+}
+
+// ── 波形绘制（ECG 纸网格 + 12 导联小多图）────────────────────────────────────
+function drawECG(wf){
+  const cv = $("#ecg"); if(!wf || !wf.leads || !wf.leads.length){ return; }
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = $("#ecgWrap").clientWidth;
+  const band = 64, labelW = 40, padX = 8;
+  const cssH = band * wf.leads.length;
+  cv.width = cssW*dpr; cv.height = cssH*dpr; cv.style.height = cssH+"px";
+  const g = cv.getContext("2d"); g.scale(dpr,dpr);
+  g.fillStyle = "#10070c"; g.fillRect(0,0,cssW,cssH);
+
+  // 网格
+  const plotW = cssW - labelW - padX;
+  g.lineWidth = 1;
+  g.strokeStyle = "rgba(220,80,120,0.13)";
+  for(let x=labelW; x<=cssW; x+=8){ g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke(); }
+  for(let y=0; y<=cssH; y+=8){ g.beginPath();g.moveTo(labelW,y);g.lineTo(cssW,y);g.stroke(); }
+  g.strokeStyle = "rgba(220,80,120,0.30)";
+  for(let x=labelW; x<=cssW; x+=40){ g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke(); }
+  for(let y=0; y<=cssH; y+=40){ g.beginPath();g.moveTo(labelW,y);g.lineTo(cssW,y);g.stroke(); }
+
+  // 全局增益
+  let maxAbs = 0.001;
+  wf.leads.forEach(L=>L.data.forEach(v=>{ if(Math.abs(v)>maxAbs) maxAbs=Math.abs(v); }));
+  const gain = (band*0.42)/maxAbs;
+
+  wf.leads.forEach((L,i)=>{
+    const baseY = i*band + band/2;
+    g.fillStyle = "#cfe9d6"; g.font="12px system-ui";
+    g.fillText(L.name, 6, baseY+4);
+    g.strokeStyle = "rgba(120,140,160,0.25)";
+    g.beginPath();g.moveTo(labelW,baseY);g.lineTo(cssW,baseY);g.stroke();
+    const n = L.data.length, dx = plotW/Math.max(1,n-1);
+    g.strokeStyle = "var(--trace)"; g.strokeStyle = "#7ee787"; g.lineWidth = 1.2;
+    g.beginPath();
+    for(let k=0;k<n;k++){
+      const x = labelW + k*dx, y = baseY - L.data[k]*gain;
+      k? g.lineTo(x,y) : g.moveTo(x,y);
+    }
+    g.stroke();
+  });
+}
+
+// ── findings 渲染 ────────────────────────────────────────────────────────────
+function renderFindings(s){
+  if(!s){ return; }
+  const el = $("#findings"); el.innerHTML = "";
+  // 测量
+  const m = s.measurement||{};
+  const meas = document.createElement("div"); meas.className="card";
+  meas.innerHTML = `<h3>测量</h3><div class="meas">
+    ${mcell(m.heart_rate,"bpm","心率")}
+    ${mcell(m.pr_interval,"ms","PR")}
+    ${mcell(m.qrs_duration,"ms","QRS")}
+    ${mcell(m.qtc_interval,"ms","QTc")}
+  </div>`;
+  el.appendChild(meas);
+  // 分类
+  const cls = s.classification||[];
+  if(cls.length){
+    const c = document.createElement("div"); c.className="card";
+    c.innerHTML = "<h3>分类发现（置信度）</h3>" + cls.map(it=>{
+      const p = Math.round(it.prob*100);
+      return `<div class="chip"><span class="lab">${esc(it.label)}</span>
+        <span class="bar"><i style="width:${p}%"></i></span><span class="pct">${p}%</span></div>`;
+    }).join("");
+    el.appendChild(c);
+  } else if(s.classification_note){
+    el.appendChild(card("分类发现", esc(s.classification_note)));
+  }
+  // 电轴
+  const mo = s.morphology||{};
+  if(mo.QRS_axis_deg!==undefined){
+    el.appendChild(card("QRS 电轴",
+      `<div class="kv">电轴 <b>${mo.QRS_axis_deg}°</b> · ${esc(mo.axis_interpretation||"")}</div>`));
+  }
+  // 信号质量
+  const sq = s.signal_quality||{};
+  if(sq.overall_quality){
+    const ok = sq.acceptable_lead_count, tot = sq.total_leads_assessed;
+    const cls2 = sq.overall_quality.includes("all_unacceptable")?"q-bad":
+                 (ok===tot?"q-ok":"q-warn");
+    el.appendChild(card("信号质量",
+      `<div class="kv"><span class="${cls2}">${esc(sq.overall_quality)}</span> · 合格导联 ${ok}/${tot}</div>`));
+  }
+  // 指南
+  if(s.guideline){ el.appendChild(card("相关指南", `<div class="kv">${esc(s.guideline)}</div>`)); }
+}
+function mcell(v,u,name){ const val=(v===null||v===undefined)?"—":v; return `<div class="m"><b>${val}</b><span>${name} (${u})</span></div>`; }
+function card(title,html){ const d=document.createElement("div"); d.className="card"; d.innerHTML=`<h3>${title}</h3>${html}`; return d; }
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+// ── 聊天 + 流式 ──────────────────────────────────────────────────────────────
+function addMsg(cls,text){ const d=document.createElement("div"); d.className="msg "+cls; d.textContent=text; $("#chat").appendChild(d); $("#chat").scrollTop=1e9; return d; }
+
+function ask(){
+  const inp = $("#q"); const q = inp.value.trim();
+  if(!q || busy) return;
+  busy = true; $("#sendBtn").disabled = true; inp.value="";
+  addMsg("user", q);
+  const bot = addMsg("bot think", "正在分析…");
+  let full = "", first = true;
+  const es = new EventSource("/api/ask?q="+encodeURIComponent(q));
+  es.onmessage = (e)=>{
+    let d; try{ d=JSON.parse(e.data); }catch(_){ return; }
+    if(d.t!==undefined){
+      if(first){ bot.classList.remove("think"); bot.textContent=""; first=false; }
+      full += d.t; bot.textContent = full; $("#chat").scrollTop=1e9;
+    } else if(d.error){
+      bot.classList.remove("think"); bot.textContent = full + "\n[错误] "+d.error; endAsk(es);
+    } else if(d.done){
+      if(first){ bot.classList.remove("think"); bot.textContent = full || "（无内容）"; }
+      speak(full); endAsk(es);
+    }
+  };
+  es.onerror = ()=>{ endAsk(es); if(first){ bot.classList.remove("think"); bot.textContent = full || "（连接中断）"; } };
+}
+function endAsk(es){ try{es.close();}catch(_){ } busy=false; $("#sendBtn").disabled=false; $("#q").focus(); }
+
+// ── 朗读（浏览器 TTS；Firefox 需装 speech-dispatcher 语音 + 接扬声器后才出声）──
+function speak(text){
+  if(!$("#ttsToggle").checked || !text || !("speechSynthesis" in window)) return;
+  try{ speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(text)); }catch(_){ }
+}
+
+$("#sendBtn").addEventListener("click", ask);
+$("#q").addEventListener("keydown", (e)=>{ if(e.key==="Enter") ask(); });
+init();
+</script>
+</body>
+</html>
