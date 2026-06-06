@@ -251,14 +251,17 @@ def run_signal_quality(signal_quality, mat_path: str) -> str:
     result = signal_quality._run(mat_path)
     if result.get("analysis_status") == "failed":
         return f"[信号质量分析失败: {result.get('note', '')}]"
-    # 逐导记录质量汇总（整体 + 不合格导联 + 待查电极），紧凑 JSON 供 LLM 使用
-    return json.dumps({
+    # 逐导记录质量汇总（整体 + 不合格导联 + 待查电极 + 失败主因提示），紧凑 JSON 供 LLM 使用
+    payload = {
         "overall_quality": result.get("overall_quality"),
         "acceptable_lead_count": result.get("acceptable_lead_count"),
         "total_leads_assessed": result.get("total_leads_assessed"),
         "unacceptable_leads": result.get("unacceptable_leads"),
         "suspect_electrodes": result.get("suspect_electrodes"),
-    }, ensure_ascii=False)
+    }
+    if result.get("quality_hint"):
+        payload["quality_hint"] = result["quality_hint"]
+    return json.dumps(payload, ensure_ascii=False)
 
 
 # ─── 指南检索（版本化，自动 grounding；可选特性）────────────────────────────

@@ -141,6 +141,36 @@ def _snr_fail(sig: np.ndarray, fs: int) -> bool:
     return (signal_power / noise_power) < SNR_THRESHOLD
 
 
+def _snr_noise_breakdown(sig: np.ndarray, fs: int):
+    """诊断 SNR 失败主因（仅描述，不参与 acceptable 判定）。
+
+    返回 (<2Hz 基线占总功率比, ≥40Hz 高频/工频占总功率比)。periodogram 默认去均值，
+    故 <2Hz 即基线漂移、≥40Hz 即高频/工频干扰。
+    """
+    f, pxx = scipy.signal.periodogram(sig, fs=fs, scaling="spectrum")
+    total = float(np.sum(pxx))
+    if total <= 0:
+        return 0.0, 0.0
+    lt2 = float(np.sum(pxx[f < SIGNAL_FREQ_BAND[0]])) / total
+    gt40 = float(np.sum(pxx[f >= SIGNAL_FREQ_BAND[1]])) / total
+    return lt2, gt40
+
+
+def _quality_hint(snr_lt2: List[float], snr_gt40: List[float]) -> str:
+    """据 SNR 失败导联的噪声构成给出可操作的失败主因提示（不影响 acceptable 判定）。"""
+    if not snr_lt2:
+        return ""
+    mean_lt2 = sum(snr_lt2) / len(snr_lt2)
+    mean_gt40 = sum(snr_gt40) / len(snr_gt40)
+    if mean_lt2 >= 0.5:
+        return ("信号以低频基线漂移为主（<2Hz 占比高）：建议检查电极是否贴牢、"
+                "保持静止、减少呼吸/移动伪迹后重测。")
+    if mean_gt40 >= 0.3:
+        return ("信号以高频/工频干扰为主（≥40Hz 占比高）：建议远离电源线、"
+                "检查接地与导联线屏蔽后重测。")
+    return "信号整体信噪比偏低（宽带噪声）：建议改善电极接触、保持静止后重新采集。"
+
+
 def _nk_quality(sig: np.ndarray, fs: int) -> Optional[float]:
     """Auxiliary continuous quality score (NeuroKit2 averageQRS, mean over the lead)."""
     try:
@@ -234,6 +264,8 @@ class ECGSignalQualityTool(BaseTool):
         leads: Dict[str, Any] = {}
         unacceptable: Dict[str, List[str]] = {}
         suspect_electrodes: List[str] = []
+        snr_lt2: List[float] = []   # SNR 失败导联的 <2Hz 基线占比（用于失败主因提示）
+        snr_gt40: List[float] = []  # SNR 失败导联的 ≥40Hz 高频/工频占比
 
         for idx, name in zip(PHYSICAL_LEAD_INDICES, PHYSICAL_LEAD_NAMES):
             raw = signal[idx, :]
@@ -257,6 +289,9 @@ class ECGSignalQualityTool(BaseTool):
                 try:
                     if _snr_fail(raw, fs):
                         failed.append("snr")
+                        lt2, gt40 = _snr_noise_breakdown(raw, fs)
+                        snr_lt2.append(lt2)
+                        snr_gt40.append(gt40)
                 except Exception:
                     pass
 
@@ -280,6 +315,8 @@ class ECGSignalQualityTool(BaseTool):
         else:
             overall = "partial"
 
+        quality_hint = _quality_hint(snr_lt2, snr_gt40)
+
         return {
             "sampling_rate": fs,
             "overall_quality": overall,
@@ -288,6 +325,7 @@ class ECGSignalQualityTool(BaseTool):
             "leads": leads,
             "unacceptable_leads": unacceptable,
             "suspect_electrodes": sorted(suspect_electrodes),
+            "quality_hint": quality_hint,
             "note": (
                 "Per-lead recording-quality assessment (ECGAssess criteria: stationarity / "
                 "heart_rate / snr) plus a NeuroKit averageQRS score (0-1). Physical leads "

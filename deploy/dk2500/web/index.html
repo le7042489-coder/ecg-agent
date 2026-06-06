@@ -104,46 +104,55 @@ async function init(){
 }
 
 // ── 波形绘制（ECG 纸网格 + 12 导联小多图）────────────────────────────────────
+// 6 行 × 2 列布局（用户指定，便于对照查看）
+const ECG_LAYOUT = [["II","I"],["aVR","III"],["aVF","aVL"],["V2","V1"],["V4","V3"],["V6","V5"]];
+
 function drawECG(wf){
   const cv = $("#ecg"); if(!wf || !wf.leads || !wf.leads.length){ return; }
+  const byName = {}; wf.leads.forEach(L=>{ byName[L.name] = L.data; });
   const dpr = window.devicePixelRatio || 1;
   const cssW = $("#ecgWrap").clientWidth;
-  const band = 64, labelW = 40, padX = 8;
-  const cssH = band * wf.leads.length;
+  const rows = ECG_LAYOUT.length, cols = 2;
+  const band = 78, labelW = 34, padX = 6;
+  const colW = cssW/cols, cssH = band*rows;
   cv.width = cssW*dpr; cv.height = cssH*dpr; cv.style.height = cssH+"px";
-  const g = cv.getContext("2d"); g.scale(dpr,dpr);
+  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
   g.fillStyle = "#10070c"; g.fillRect(0,0,cssW,cssH);
 
-  // 网格
-  const plotW = cssW - labelW - padX;
+  // ECG 纸网格（贯穿整幅）
   g.lineWidth = 1;
-  g.strokeStyle = "rgba(220,80,120,0.13)";
-  for(let x=labelW; x<=cssW; x+=8){ g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke(); }
-  for(let y=0; y<=cssH; y+=8){ g.beginPath();g.moveTo(labelW,y);g.lineTo(cssW,y);g.stroke(); }
-  g.strokeStyle = "rgba(220,80,120,0.30)";
-  for(let x=labelW; x<=cssW; x+=40){ g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke(); }
-  for(let y=0; y<=cssH; y+=40){ g.beginPath();g.moveTo(labelW,y);g.lineTo(cssW,y);g.stroke(); }
+  g.strokeStyle = "rgba(220,80,120,0.12)";
+  for(let x=0;x<=cssW;x+=8){ g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke(); }
+  for(let y=0;y<=cssH;y+=8){ g.beginPath();g.moveTo(0,y);g.lineTo(cssW,y);g.stroke(); }
+  g.strokeStyle = "rgba(220,80,120,0.28)";
+  for(let x=0;x<=cssW;x+=40){ g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke(); }
+  for(let y=0;y<=cssH;y+=40){ g.beginPath();g.moveTo(0,y);g.lineTo(cssW,y);g.stroke(); }
+  g.strokeStyle = "rgba(120,140,160,0.35)";   // 列分隔线
+  g.beginPath();g.moveTo(colW,0);g.lineTo(colW,cssH);g.stroke();
 
-  // 全局增益
+  // 全局增益（所有导联统一 mV 比例）
   let maxAbs = 0.001;
-  wf.leads.forEach(L=>L.data.forEach(v=>{ if(Math.abs(v)>maxAbs) maxAbs=Math.abs(v); }));
-  const gain = (band*0.42)/maxAbs;
+  ECG_LAYOUT.forEach(row=>row.forEach(n=>{ const d=byName[n]; if(d) d.forEach(v=>{ if(Math.abs(v)>maxAbs) maxAbs=Math.abs(v); }); }));
+  const gain = (band*0.40)/maxAbs;
 
-  wf.leads.forEach((L,i)=>{
-    const baseY = i*band + band/2;
-    g.fillStyle = "#cfe9d6"; g.font="12px system-ui";
-    g.fillText(L.name, 6, baseY+4);
-    g.strokeStyle = "rgba(120,140,160,0.25)";
-    g.beginPath();g.moveTo(labelW,baseY);g.lineTo(cssW,baseY);g.stroke();
-    const n = L.data.length, dx = plotW/Math.max(1,n-1);
-    g.strokeStyle = "var(--trace)"; g.strokeStyle = "#7ee787"; g.lineWidth = 1.2;
-    g.beginPath();
-    for(let k=0;k<n;k++){
-      const x = labelW + k*dx, y = baseY - L.data[k]*gain;
-      k? g.lineTo(x,y) : g.moveTo(x,y);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const name = ECG_LAYOUT[r][c], data = byName[name];
+      const x0 = c*colW + labelW, plotW = colW - labelW - padX, baseY = r*band + band/2;
+      g.fillStyle = "#cfe9d6"; g.font = "12px system-ui";
+      g.fillText(name, c*colW + 5, r*band + 14);
+      if(!data){ continue; }
+      g.strokeStyle = "rgba(120,140,160,0.22)";
+      g.beginPath();g.moveTo(x0,baseY);g.lineTo(c*colW+colW-padX,baseY);g.stroke();
+      const n = data.length, dx = plotW/Math.max(1,n-1);
+      g.strokeStyle = "#7ee787"; g.lineWidth = 1.2; g.beginPath();
+      for(let k=0;k<n;k++){
+        const x = x0 + k*dx, y = baseY - data[k]*gain;
+        k? g.lineTo(x,y) : g.moveTo(x,y);
+      }
+      g.stroke();
     }
-    g.stroke();
-  });
+  }
 }
 
 // ── findings 渲染 ────────────────────────────────────────────────────────────
@@ -192,6 +201,9 @@ function renderFindings(s){
       html += `<div class="kv" style="margin-top:5px">可疑`
         + `<span class="term" title="电极 = 贴在身上的物理传感器（RA/LA/LL/V1…）；这是真正该去重贴或检查的对象">电极</span>`
         + `（建议重贴/检查）：${elec.map(esc).join("、")}</div>`;
+    }
+    if(sq.quality_hint){
+      html += `<div class="kv" style="margin-top:5px;color:var(--warn)">⚠ ${esc(sq.quality_hint)}</div>`;
     }
     el.appendChild(card("信号质量", html));
   }
