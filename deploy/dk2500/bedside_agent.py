@@ -17,11 +17,14 @@ DK-2500 床旁 ECG-Agent 交互入口
 """
 
 import argparse
+import itertools
 import json
 import os
+import re
 import sys
 import subprocess
 import textwrap
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -150,22 +153,61 @@ def load_llm_llamacpp(gguf_path: str):
     return llm
 
 
-def generate_transformers(model, tokenizer, gen_config, messages: list) -> str:
+def generate_transformers_stream(model, tokenizer, gen_config, messages: list, on_token=None) -> str:
+    """流式生成（transformers 后端）。
+
+    逐 token 产出：每段新文本调用 on_token(text)，同时累积并返回完整字符串
+    （供 parse_response 解析 Action/Thought/Content）。
+    """
+    from transformers import TextIteratorStreamer
+    from threading import Thread
+
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    with torch.no_grad():
-        outputs = model.generate(**inputs, generation_config=gen_config)
-    new_tokens = outputs[0][inputs["input_ids"].shape[1]:]
-    return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+    gen_kwargs = {**inputs, "generation_config": gen_config, "streamer": streamer}
+
+    def _run_generate():
+        with torch.no_grad():
+            model.generate(**gen_kwargs)
+
+    thread = Thread(target=_run_generate)
+    thread.start()
+
+    full = []
+    for text in streamer:
+        full.append(text)
+        if on_token:
+            on_token(text)
+    thread.join()
+    return "".join(full).strip()
 
 
-def generate_llamacpp(llm, messages: list) -> str:
-    response = llm.create_chat_completion(
+def generate_llamacpp_stream(llm, messages: list, on_token=None) -> str:
+    """流式生成（llama-cpp 后端）。逐 delta 产出并累积返回完整字符串。"""
+    full = []
+    for chunk in llm.create_chat_completion(
         messages=messages,
         max_tokens=512,
         temperature=0.0,
-    )
-    return response["choices"][0]["message"]["content"].strip()
+        stream=True,
+    ):
+        delta = chunk["choices"][0]["delta"].get("content")
+        if delta:
+            full.append(delta)
+            if on_token:
+                on_token(delta)
+    return "".join(full).strip()
+
+
+def generate_transformers(model, tokenizer, gen_config, messages: list) -> str:
+    """非流式封装：消费流式生成后返回完整字符串。"""
+    return generate_transformers_stream(model, tokenizer, gen_config, messages, on_token=None)
+
+
+def generate_llamacpp(llm, messages: list) -> str:
+    """非流式封装：消费流式生成后返回完整字符串。"""
+    return generate_llamacpp_stream(llm, messages, on_token=None)
 
 
 # ─── ECG 工具（现算模式）────────────────────────────────────────────────────
@@ -322,8 +364,6 @@ def run_selftest(mat_path: str):
 
 # ─── 响应解析 ────────────────────────────────────────────────────────────────
 
-import re
-
 def parse_response(text: str) -> dict:
     action_m = re.search(r"(?im)^\s*\[?\s*Action\s*[:\-]\s*([^\n\r\]]+)", text)
     thought_m = re.search(
@@ -346,6 +386,131 @@ def format_assistant_turn(turn: dict) -> str:
     elif "content" in turn:
         s += f"Content: {turn.get('content', '')}"
     return s.strip()
+
+
+# ─── 流式显示：只把最终应答（Content: 之后）实时打印给用户 ────────────────────
+
+class ContentStreamer:
+    """在流式生成过程中，只把「给用户看的最终应答」实时打印出来。
+
+    模型输出是结构化的 Action/Thought/Content 文本——只有 `Content:` 之后的内容
+    才是给用户的回答。本类在 token 流上：
+      - 跳过 Action / Thought 脚手架（不显示）；
+      - 检测到 tool-call 类 Action 时整段静默（该次没有 Content，交给工具+二次生成）；
+      - 越过 `Content:` 标记后逐 token 实时打印；首个非空字符出现时才打印前缀，
+        避免在无内容时留下一个空的「ECG-Agent: 」。
+    `enabled=False` 时全程静默（用于 --force-action 调试路径的首次生成）。
+
+    只负责「显示」；完整原文仍由调用方交给 parse_response 解析，数据流不受影响。
+    """
+
+    _ACTION = re.compile(r"(?im)^[ \t]*\[?[ \t]*Action[ \t]*[:\-][ \t]*([A-Za-z_]+)")
+    _CONTENT = re.compile(r"(?im)^[ \t]*\[?[ \t]*Content[ \t]*:[ \t]*")
+    _TOOL_ACTIONS = {
+        "call_classification_tool", "call_measurement_tool",
+        "call_morphology_tool", "call_signal_quality_tool",
+    }
+
+    def __init__(self, prefix="ECG-Agent: ", enabled=True, out=None, on_first=None):
+        self.prefix = prefix
+        self.enabled = enabled
+        self.out = out if out is not None else sys.stdout
+        self.on_first = on_first  # 首个应答字符到达前调用（用于停掉等待转圈并清行）
+        self.buf = ""
+        self.in_content = False   # 已越过 Content: 标记，后续 token 直接打印
+        self.started = False      # 已打印过至少一个非空字符（真正显示了内容）
+        self.suppressed = False   # 检测到 tool-call，本段不显示
+
+    def feed(self, token: str):
+        if not self.enabled or self.suppressed:
+            return
+        if self.in_content:
+            self._emit(token)
+            return
+        self.buf += token
+        am = self._ACTION.search(self.buf)
+        if am and am.group(1) in self._TOOL_ACTIONS:
+            self.suppressed = True
+            return
+        cm = self._CONTENT.search(self.buf)
+        if cm:
+            self.in_content = True
+            self._emit(self.buf[cm.end():])
+
+    def _emit(self, text: str):
+        if not self.started:
+            text = text.lstrip()      # 跳过 Content: 后的前导空白/换行
+            if not text:
+                return
+            if self.on_first is not None:
+                self.on_first()       # 先停掉等待转圈并清行，再打印应答（避免争抢同一行）
+            self.out.write(self.prefix)
+            self.started = True
+        self.out.write(text)
+        self.out.flush()
+
+    def finish(self):
+        if self.started:
+            self.out.write("\n\n")
+            self.out.flush()
+
+
+# ─── 等待动画：模型「思考/prompt-eval」静默期给用户反馈 ───────────────────────
+
+class Spinner:
+    """终端等待转圈。仅在交互式终端（isatty）显示，被管道/重定向时整体降级为
+    no-op（不画、不清行），避免污染日志。
+
+    start() 起一个后台线程持续刷新同一行；stop() 幂等——停止后台线程并清行。
+    与 ContentStreamer 配合：应答首字到达前调用 stop()（join 掉后台线程后再清行），
+    确保转圈线程先停，再由主线程打印应答，二者不会争抢同一行。
+    """
+
+    _FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
+
+    def __init__(self, message="正在分析…", interval=0.12, out=None):
+        self.message = message
+        self.interval = interval
+        self.out = out if out is not None else sys.stdout
+        self._stop = threading.Event()
+        self._thread = None
+        self._lock = threading.Lock()
+
+    def _enabled(self):
+        try:
+            return bool(self.out.isatty())
+        except Exception:
+            return False
+
+    def start(self):
+        if not self._enabled():
+            return
+        with self._lock:
+            if self._thread is not None:
+                return
+            self._stop.clear()
+            self._thread = threading.Thread(target=self._spin, daemon=True)
+            self._thread.start()
+
+    def _spin(self):
+        for frame in itertools.cycle(self._FRAMES):
+            if self._stop.is_set():
+                break
+            self.out.write(f"\r{self.message} {frame} ")
+            self.out.flush()
+            self._stop.wait(self.interval)
+
+    def stop(self):
+        with self._lock:
+            thread = self._thread
+            self._thread = None
+        if thread is None:
+            return
+        self._stop.set()
+        thread.join(timeout=1.0)
+        if self._enabled():
+            self.out.write("\r\033[K")  # 回到行首并清除到行尾
+            self.out.flush()
 
 
 # ─── 主对话循环 ───────────────────────────────────────────────────────────────
@@ -386,12 +551,27 @@ def run_bedside_session(mat_path: str, backend: str, args):
     print("\n[Agent] 加载 LLM（首次加载较慢，请稍候）...")
     if backend == "llama-cpp":
         llm = load_llm_llamacpp(args.gguf)
-        generate = lambda msgs: generate_llamacpp(llm, msgs)
+        stream_generate = lambda msgs, on_token: generate_llamacpp_stream(llm, msgs, on_token)
     else:
         model, tokenizer, gen_config = load_llm_transformers(
             args.base_model, str(ADAPTER_PATH)
         )
-        generate = lambda msgs: generate_transformers(model, tokenizer, gen_config, msgs)
+        stream_generate = lambda msgs, on_token: generate_transformers_stream(
+            model, tokenizer, gen_config, msgs, on_token
+        )
+
+    def gen_streamed(msgs, live=True, spinner=None):
+        """流式生成并实时显示最终应答；返回 (完整原文, 是否已显示内容)。
+
+        live=False 时全程静默——仅用于 --force-action 调试路径的首次生成：
+        该次输出可能被强制 action 覆盖，提前显示会与二次生成重复。
+        spinner：传入则在首个应答字符到达前 stop()（清除等待转圈行）。
+        """
+        printer = ContentStreamer(prefix="ECG-Agent: ", enabled=live,
+                                  on_first=(spinner.stop if spinner is not None else None))
+        raw = stream_generate(msgs, printer.feed)
+        printer.finish()
+        return raw, printer.started
 
     # 4. 对话循环
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -415,63 +595,81 @@ def run_bedside_session(mat_path: str, backend: str, args):
 
         messages.append({"role": "user", "content": user_input})
 
-        # LLM 第一次生成（决定 action）
-        raw = generate(messages)
-        parsed = parse_response(raw)
-        action = parsed["action"]
+        # 本轮等待动画：从用户回车起转圈，应答首字到达时由 ContentStreamer 清除。
+        # 工具问答跨 gen-1(静默)+工具+gen-2，spinner 一路转到答案首字；直接应答转到 gen-1 首字。
+        print()  # 与上一轮之间留一空行
+        spinner = Spinner("正在分析…")
+        spinner.start()
+        try:
+            # LLM 第一次生成（决定 action）。直接应答（response 等）会在此流式显示；
+            # 工具调用类 action 不含 Content:，本次静默，留待二次生成。
+            # --force-action 时本次完全静默（live=False），避免被强制覆盖后重复输出。
+            raw, shown = gen_streamed(messages, spinner=spinner,
+                                      live=(getattr(args, "force_action", None) is None))
+            parsed = parse_response(raw)
+            action = parsed["action"]
 
-        # 临时验证 hack（重训前）：强制 action，验证工具+接线+输出格式跑通。
-        # 模型尚未在 call_morphology_tool 上训练，靠它自主选择不可靠，故先手动强制。
-        # 重训并把新 action 写入 system prompt 后，删除此分支即可。
-        if getattr(args, "force_action", None):
-            print(f"[force-action] 强制 action = {args.force_action}（覆盖模型输出 '{action}'）")
-            action = args.force_action
+            # 临时验证 hack（重训前）：强制 action，验证工具+接线+输出格式跑通。
+            # 模型尚未在 call_morphology_tool 上训练，靠它自主选择不可靠，故先手动强制。
+            # 重训并把新 action 写入 system prompt 后，删除此分支即可。
+            if getattr(args, "force_action", None):
+                spinner.stop()  # 调试信息要占整行，先停转圈
+                print(f"[force-action] 强制 action = {args.force_action}（覆盖模型输出 '{action}'）")
+                action = args.force_action
 
-        if action in ("call_classification_tool", "call_measurement_tool",
-                      "call_morphology_tool", "call_signal_quality_tool"):
-            # 使用预计算结果
-            tool_output = {
-                "call_classification_tool": cached_classification,
-                "call_measurement_tool": cached_measurement,
-                "call_morphology_tool": cached_morphology,
-                "call_signal_quality_tool": cached_signal_quality,
-            }[action]
-            # 自动 grounding：把相关指南并入分类工具输出，让应答 turn 一并阅读
-            #（走 Tool_Output 通道，与微调训练格式一致；默认关闭，见 --guideline）
-            if action == "call_classification_tool" and cached_guideline:
-                tool_output = f"{tool_output}\n{cached_guideline}"
-            tool_turn = {
-                "role": "assistant",
-                "action": action,
-                "thought": parsed["thought"],
-                "tool_output": tool_output,
-            }
-            messages.append({"role": "assistant", "content": format_assistant_turn(tool_turn)})
+            if action in ("call_classification_tool", "call_measurement_tool",
+                          "call_morphology_tool", "call_signal_quality_tool"):
+                # 使用预计算结果
+                tool_output = {
+                    "call_classification_tool": cached_classification,
+                    "call_measurement_tool": cached_measurement,
+                    "call_morphology_tool": cached_morphology,
+                    "call_signal_quality_tool": cached_signal_quality,
+                }[action]
+                # 自动 grounding：把相关指南并入分类工具输出，让应答 turn 一并阅读
+                #（走 Tool_Output 通道，与微调训练格式一致；默认关闭，见 --guideline）
+                if action == "call_classification_tool" and cached_guideline:
+                    tool_output = f"{tool_output}\n{cached_guideline}"
+                tool_turn = {
+                    "role": "assistant",
+                    "action": action,
+                    "thought": parsed["thought"],
+                    "tool_output": tool_output,
+                }
+                messages.append({"role": "assistant", "content": format_assistant_turn(tool_turn)})
 
-            # LLM 第二次生成（基于工具输出作答）
-            raw2 = generate(messages)
-            parsed2 = parse_response(raw2)
-            response_turn = {
-                "role": "assistant",
-                "action": parsed2.get("action", "response"),
-                "thought": parsed2.get("thought", ""),
-                "content": parsed2.get("content", raw2),
-            }
-            messages.append({"role": "assistant", "content": format_assistant_turn(response_turn)})
-            print(f"\nECG-Agent: {response_turn['content']}\n")
-        else:
-            # 直接回复（response / response_followup / system_bye / response_fail）
-            direct_turn = {
-                "role": "assistant",
-                "action": action,
-                "thought": parsed["thought"],
-                "content": parsed.get("content", raw),
-            }
-            messages.append({"role": "assistant", "content": format_assistant_turn(direct_turn)})
-            print(f"\nECG-Agent: {direct_turn['content']}\n")
+                # LLM 第二次生成（基于工具输出作答）——流式显示给用户
+                raw2, shown2 = gen_streamed(messages, live=True, spinner=spinner)
+                parsed2 = parse_response(raw2)
+                response_turn = {
+                    "role": "assistant",
+                    "action": parsed2.get("action", "response"),
+                    "thought": parsed2.get("thought", ""),
+                    "content": parsed2.get("content", raw2),
+                }
+                messages.append({"role": "assistant", "content": format_assistant_turn(response_turn)})
+                # 流式已实时打印；仅当未显示（输出缺 Content: 等异常）才回退整段打印
+                if not shown2:
+                    spinner.stop()
+                    print(f"ECG-Agent: {response_turn['content']}\n")
+            else:
+                # 直接回复（response / response_followup / system_bye / response_fail）
+                direct_turn = {
+                    "role": "assistant",
+                    "action": action,
+                    "thought": parsed["thought"],
+                    "content": parsed.get("content", raw),
+                }
+                messages.append({"role": "assistant", "content": format_assistant_turn(direct_turn)})
+                # 首次生成已流式打印；仅当未显示（被 --force-action 静默或缺 Content:）才回退
+                if not shown:
+                    spinner.stop()
+                    print(f"ECG-Agent: {direct_turn['content']}\n")
 
-            if action == "system_bye":
-                break
+                if action == "system_bye":
+                    break
+        finally:
+            spinner.stop()  # 确保任何路径（含异常/break）都清除转圈
 
 
 # ─── 入口 ─────────────────────────────────────────────────────────────────────
