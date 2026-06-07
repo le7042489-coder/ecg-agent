@@ -134,6 +134,20 @@ def load_llm_transformers(base_model_path: str, adapter_path: str):
     return model, tokenizer, gen_config
 
 
+def _pick_llamacpp_threads() -> int:
+    """选择 llama.cpp 解码线程数。
+
+    Intel 混合架构（Core Ultra 的 P + E + LP-E 核）上，把解码线程铺满所有逻辑核
+    （含能效/低功耗核）通常比只用性能核更慢——同步的每步解码会被慢核拖住。默认取约
+    一半并夹在 [4, 8]；可用环境变量 ECG_LLAMA_THREADS 覆盖成实测最优值。
+    """
+    env = os.environ.get("ECG_LLAMA_THREADS")
+    if env and env.isdigit() and int(env) > 0:
+        return int(env)
+    n = os.cpu_count() or 4
+    return max(4, min(8, n // 2)) if n > 8 else n
+
+
 def load_llm_llamacpp(gguf_path: str):
     """加载 LLM（llama-cpp 后端，推荐低内存场景）。"""
     try:
@@ -143,25 +157,44 @@ def load_llm_llamacpp(gguf_path: str):
             "llama-cpp-python 未安装。运行: pip install llama-cpp-python"
         )
 
-    print(f"[LLM] llama-cpp 加载 GGUF: {gguf_path}")
+    n_threads = _pick_llamacpp_threads()
+    n_threads_batch = os.cpu_count()  # prefill 是批算、吃满核更快；只有解码才怕慢核
+    print(f"[LLM] llama-cpp 加载 GGUF: {gguf_path}"
+          f"（解码线程={n_threads} / prefill 线程={n_threads_batch}）")
     llm = Llama(
         model_path=gguf_path,
         n_ctx=4096,
-        n_threads=os.cpu_count(),
+        n_threads=n_threads,
+        n_threads_batch=n_threads_batch,
         verbose=False,
     )
     return llm
 
 
-def iter_transformers(model, tokenizer, gen_config, messages: list):
-    """流式生成原始 token（transformers 后端）——逐段 yield 文本。"""
-    from transformers import TextIteratorStreamer
+def iter_transformers(model, tokenizer, gen_config, messages: list, max_tokens=None, stop=None):
+    """流式生成原始 token（transformers 后端）——逐段 yield 文本。
+
+    max_tokens: 覆盖 gen_config 的 max_new_tokens（warmup / gen-1 限长用）。
+    stop: 命中任一子串即停（gen-1 在 `Tool_Output:` 处刹车，省掉选完工具后的无用解码）。
+    """
+    from transformers import TextIteratorStreamer, StoppingCriteria, StoppingCriteriaList
     from threading import Thread
 
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
     gen_kwargs = {**inputs, "generation_config": gen_config, "streamer": streamer}
+    if max_tokens is not None:
+        gen_kwargs["max_new_tokens"] = max_tokens
+    if stop:
+        prompt_len = inputs["input_ids"].shape[1]
+
+        class _StopOnStrings(StoppingCriteria):
+            def __call__(self, input_ids, scores, **kw):
+                tail = tokenizer.decode(input_ids[0][prompt_len:], skip_special_tokens=True)
+                return any(s in tail for s in stop)
+
+        gen_kwargs["stopping_criteria"] = StoppingCriteriaList([_StopOnStrings()])
 
     def _run_generate():
         with torch.no_grad():
@@ -176,12 +209,16 @@ def iter_transformers(model, tokenizer, gen_config, messages: list):
         thread.join()
 
 
-def iter_llamacpp(llm, messages: list):
-    """流式生成原始 token（llama-cpp 后端）——逐 delta yield 文本。"""
+def iter_llamacpp(llm, messages: list, max_tokens=512, stop=None):
+    """流式生成原始 token（llama-cpp 后端）——逐 delta yield 文本。
+
+    max_tokens / stop：gen-1 用 stop=["Tool_Output:"] 选完工具即刹车；warmup 用 max_tokens=1。
+    """
     for chunk in llm.create_chat_completion(
         messages=messages,
-        max_tokens=512,
+        max_tokens=max_tokens,
         temperature=0.0,
+        stop=stop or [],
         stream=True,
     ):
         delta = chunk["choices"][0]["delta"].get("content")
@@ -448,6 +485,10 @@ class Spinner:
         self._thread = None
         self._lock = threading.Lock()
 
+    def set_message(self, message):
+        """运行中更新转圈文案（阶段提示用）；下一帧自动生效。"""
+        self.message = message
+
     def _enabled(self):
         try:
             return bool(self.out.isatty())
@@ -495,6 +536,7 @@ def run_bedside_session(mat_path: str, backend: str, args):
         guideline=getattr(args, "guideline", False),
         guideline_index=getattr(args, "guideline_index", None),
         force_action=getattr(args, "force_action", None),
+        fast_route=not getattr(args, "no_fast_route", False),
     )
     if getattr(args, "force_action", None):
         print(f"[force-action] 已启用：每轮强制 action = {args.force_action}")
@@ -522,7 +564,7 @@ def run_bedside_session(mat_path: str, backend: str, args):
         spinner.start()
         first = True
         try:
-            for chunk in agent.ask_stream(user_input):
+            for chunk in agent.ask_stream(user_input, status_cb=spinner.set_message):
                 if first:
                     spinner.stop()
                     sys.stdout.write("ECG-Agent: ")
@@ -598,6 +640,9 @@ def main():
     parser.add_argument("--guideline-index", default=None,
                         help="指南预构建索引目录（dense+RRF）；缺省读 ECG_GUIDELINE_INDEX 环境变量，"
                              "再缺省用随仓库占位语料 BM25-only。")
+    parser.add_argument("--no-fast-route", action="store_true",
+                        help="关闭快速路由（默认开）：开启时用关键词直接判明工具、跳过 gen-1 选择趟，"
+                             "显著缩短首 token；关闭则每轮都让模型自主决定 action（两趟生成）。")
     parser.add_argument("--selftest", action="store_true",
                         help="工具自检：运行 measurement+morphology 并打印输出后退出"
                              "（不加载 LLM / 分类 checkpoint）")

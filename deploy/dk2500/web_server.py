@@ -121,7 +121,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Accel-Buffering", "no")  # 关掉可能的反代缓冲
         self.end_headers()
 
-        gen = agent.ask_stream(q)
+        # 阶段提示：首字到达前推 {"status": ...}，前端据此更新「正在…」文案而非冻屏。
+        # status_cb 在生成器内同线程被调用，与下面 _sse 写同一 wfile，无并发问题。
+        gen = agent.ask_stream(q, status_cb=lambda s: self._sse({"status": s}))
         try:
             for chunk in gen:
                 self._sse({"t": chunk})
@@ -168,6 +170,8 @@ def main():
     parser.add_argument("--lepod-rate", type=int, default=250)
     parser.add_argument("--guideline", action="store_true", help="启用指南自动 grounding（默认关）")
     parser.add_argument("--guideline-index", default=None)
+    parser.add_argument("--no-fast-route", action="store_true",
+                        help="关闭快速路由（默认开）：开启时用关键词直接判明工具、跳过 gen-1，缩短首 token。")
     parser.add_argument("--host", default="127.0.0.1", help="监听地址（默认仅本机；外部访问用 0.0.0.0）")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
@@ -185,6 +189,7 @@ def main():
     agent = BedsideAgent(
         mat_path, backend=args.backend, gguf=args.gguf, base_model=args.base_model,
         guideline=args.guideline, guideline_index=args.guideline_index,
+        fast_route=not args.no_fast_route,
     )
 
     httpd = AgentHTTPServer((args.host, args.port), Handler, agent)

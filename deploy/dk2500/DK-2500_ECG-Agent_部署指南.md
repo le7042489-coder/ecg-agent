@@ -84,15 +84,15 @@ echo "打包完成：$(du -sh ecg-agent-dk2500.tar.gz)"
 
 ### 1.3 传输到 DK-2500
 
-DK-2500 地址：`user@10.157.225.11`
+DK-2500 地址：当前用**网线直连** `user@192.168.137.2`（局域网 IP 常变；开发机经网关路由可达）。下方命令里的地址按实际替换。
 
 ```bash
 # 从开发机推送（需与 DK-2500 在同一局域网）
-scp ecg-agent-dk2500.tar.gz user@10.157.225.11:~/workspace/ECG-Agent/
+scp ecg-agent-dk2500.tar.gz user@192.168.137.2:~/workspace/ECG-Agent/
 
 # 如果 ~/workspace/ECG-Agent/ 目录不存在，先建：
-ssh user@10.157.225.11 "mkdir -p ~/workspace/ECG-Agent"
-scp ecg-agent-dk2500.tar.gz user@10.157.225.11:~/workspace/ECG-Agent/
+ssh user@192.168.137.2 "mkdir -p ~/workspace/ECG-Agent"
+scp ecg-agent-dk2500.tar.gz user@192.168.137.2:~/workspace/ECG-Agent/
 ```
 
 或通过 U 盘离线传输：
@@ -222,7 +222,7 @@ echo "GGUF 文件大小: $(du -sh ecg_agent_llama3b_q4km.gguf)"
 #### B.3 传输 GGUF 到 DK-2500
 
 ```bash
-scp ecg_agent_llama3b_q4km.gguf user@10.157.225.11:~/workspace/ECG-Agent/
+scp ecg_agent_llama3b_q4km.gguf user@192.168.137.2:~/workspace/ECG-Agent/
 ```
 
 #### B.4 DK-2500 上使用 GGUF
@@ -371,9 +371,28 @@ ECG-Agent: You're welcome! Take care and feel free to ask if you have any other 
 | 测量工具推理（CPU） | 1–3 秒/条 |
 | LLM 生成（路径 A, transformers） | 1–3 token/s |
 | LLM 生成（路径 B, llama-cpp） | 3–8 token/s |
+| 首 token（路径 B，已优化，见 §6.1） | 较旧两趟通常≈砍半；首轮再省一次系统提示冷处理 |
 | 完整一次问答（含思考）| 约 30–90 秒 |
 
 > 每次启动 `bedside_agent.py` 时，工具和 LLM 一次性加载，后续对话不再重新加载。
+
+### 6.1 首 token 时延优化（默认开启）
+
+床旁体验的关键是「问完到蹦出第一个字」的等待（首 token）。原实现每轮跑**两趟生成**，且只在第二趟出现 `Content:` 后才放行正文——用户要干等约两趟的隐藏解码。已做如下优化（**默认开**；`--no-fast-route` 可关回旧两趟以对照）：
+
+- **关键词路由跳过第一趟**：问心率 / 正常吗 / ST / 信号质量等能直接判明要调哪个工具时，跳过「选工具」那一趟、直接作答；问「严重吗 / 需要看医生」等预后类则回退让模型自己判断（保留拒答能力）。
+- **启动预热**：加载后先把不变的系统提示喂进 KV 缓存，首轮不再冷处理整段提示。
+- **第一趟刹车**：回退路径选完工具即停（`stop=Tool_Output:`），不再白生成被丢弃的内容。
+- **线程分别调优**：解码取约半数核、prefill 吃满核（见 §7「推理速度极慢」一条，`ECG_LLAMA_THREADS` 可覆盖）。
+- **阶段进度**：首字前 CLI 转圈 / 网页气泡显示「正在结合分类结果作答…」，不再冻屏。
+
+A/B 对照（加 `--no-fast-route` 看旧两趟时延）：
+```bash
+python web_server.py --mat <ecg.mat> --backend llama-cpp --gguf <...gguf>                 # 新（默认，路由开）
+python web_server.py --mat <ecg.mat> --backend llama-cpp --gguf <...gguf> --no-fast-route  # 旧两趟对照
+```
+
+> 工程权衡：路由是无模型的关键词匹配，可能偶尔答非用户本意的工具；`--no-fast-route` 始终可退回模型自主决定。`agent_core.py` 的 `_route()` 即路由规则，加病种/关键词在此维护。
 
 ---
 
@@ -421,12 +440,12 @@ A: 可能原因：
 尝试重新采集 30 秒以上的清晰 ECG。
 
 **Q: 推理速度极慢（< 1 token/s）**  
-A: 确认使用了全部 CPU 核心：
+A: 确认在用路径 B（llama-cpp）。本机 14 逻辑核为 Intel 混合架构（2 性能核 + 8 能效核 + 2 低功耗核）：
 ```bash
-htop  # 推理时应看到多核利用率高
+htop  # 推理时看多核利用率；解码阶段不必铺满所有核
 ```
-如果使用路径 B（llama-cpp），`n_threads=os.cpu_count()` 已设置。  
-如果使用路径 A（transformers），加载时间长是正常现象，推理速度受 RAM 带宽限制。
+llama-cpp 后端线程已分别调优——**解码线程取约半数并夹在 [4,8]**（本机=7；铺满含能效/低功耗核反而拖慢同步的逐步解码），**prefill 线程吃满所有核**（批算更快）。按实测覆盖解码线程数：`ECG_LLAMA_THREADS=N python web_server.py ...`。  
+路径 A（transformers）加载慢属正常，速度受 RAM 带宽限制——演示/床旁请用路径 B。
 
 ---
 
@@ -441,6 +460,8 @@ htop  # 推理时应看到多核利用率高
 | ⭐⭐ | OpenVINO NPU 加速 | 利用 Intel AI Boost 12 TOPS NPU，需模型转换 |
 | ⭐ | 添加实时波形显示 | 基于 matplotlib 动画滚动 ECG 波形 |
 | ⭐ | Web UI 界面 | Flask/FastAPI + 简单前端，替代终端对话 |
+
+> 注（2026-06）：网页界面与 12 导联波形显示**已完成**（§5、场景 5、§6.1）；首 token 已优化。再提速可走 **SYCL/Vulkan 把 prefill 卸到 Arc 核显**，或 OpenVINO NPU（上表 NPU 行）。
 
 ---
 

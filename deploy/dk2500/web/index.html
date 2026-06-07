@@ -230,6 +230,8 @@ function ask(){
     if(d.t!==undefined){
       if(first){ bot.classList.remove("think"); bot.textContent=""; first=false; }
       full += d.t; bot.textContent = full; $("#chat").scrollTop=1e9;
+    } else if(d.status!==undefined){
+      if(first){ bot.textContent = d.status; $("#chat").scrollTop=1e9; }  // 首字前的阶段进度
     } else if(d.error){
       bot.classList.remove("think"); bot.textContent = full + "\n[错误] "+d.error; endAsk(es);
     } else if(d.done){
