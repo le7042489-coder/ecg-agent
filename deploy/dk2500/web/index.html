@@ -63,10 +63,11 @@
   .alertbar{padding:9px 16px;background:#5a1d1d;color:#ffd9d6;border-bottom:1px solid var(--bad);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;animation:flash .5s}
   .alertbar[hidden]{display:none}
   @keyframes flash{from{background:#7d2826}to{background:#5a1d1d}}
-  /* 滚动节律监护条 */
-  .pane-title .live{color:var(--accent);font-weight:700;margin-left:6px}
-  #stripWrap{background:#10070c;border-bottom:1px solid var(--line)}
-  #strip{display:block;width:100%}
+  /* 12 导联 快照/滚动 模式切换 */
+  .pt-wave{display:flex;align-items:center;gap:10px}
+  .pt-wave .modebtn{margin-left:auto;background:#30363d;color:var(--fg);border:1px solid var(--line);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;text-transform:none;letter-spacing:0}
+  .pt-wave .modebtn:hover{background:#3a414c}
+  .pt-wave .livetag{color:var(--accent);font-size:11px;font-weight:700}
 </style>
 </head>
 <body>
@@ -81,9 +82,10 @@
 <div class="alertbar" id="alertBar" hidden></div>
 <main>
   <section class="left">
-    <div class="pane-title">节律监护 · II<span class="live" id="stripLive">●</span></div>
-    <div id="stripWrap"><canvas id="strip"></canvas></div>
-    <div class="pane-title">12 导联快照</div>
+    <div class="pane-title pt-wave"><span>12 导联</span>
+      <button id="modeBtn" class="modebtn">切换到滚动 ▶</button>
+      <span class="livetag" id="liveTag" hidden>● 实时滚动</span>
+    </div>
     <div id="ecgWrap"><canvas id="ecg"></canvas></div>
     <div class="pane-title">分析发现</div>
     <div id="findings"><div class="card">加载中…</div></div>
@@ -121,9 +123,10 @@ async function loadEcg(){
 }
 function init(){
   loadEcg().catch(e=>{ $("#ecgFile").textContent = "加载失败: "+e; });
-  window.addEventListener("resize", ()=>{ if(lastWf) drawECG(lastWf); });
+  window.addEventListener("resize", ()=>{ if(waveMode==="snapshot" && lastWf) drawECG(lastWf); });
+  $("#modeBtn").addEventListener("click", ()=> setMode(waveMode==="scroll" ? "snapshot" : "scroll"));
   connectGate();
-  requestAnimationFrame(stripLoop);   // 节律监护条按实时平滑卷动
+  requestAnimationFrame(waveLoop);   // 波形按实时平滑卷动（仅滚动模式绘制）
 }
 
 // ── 门控：常驻订阅 /api/gate/stream，实时态 + 异常报警 + 自动切到异常窗 ─────────
@@ -148,59 +151,71 @@ function updateGate(d){
 function showAlert(text){ const bar=$("#alertBar"); bar.hidden=false; bar.textContent=text; }
 function fmt(v){ return (v===undefined||v===null)?"—":(typeof v==="number"?v.toFixed(3):v); }
 
-// ── 滚动节律监护条（lead II）：门控每窗推新样本，按实时速度平滑卷动 ──────────────
-let stripBuf = [];          // lead II 样本
-let stripFs = 125;          // 采样率（门控给）
-let drawHead = 0;           // 播放游标（样本，浮点，按实时推进）
-let lastTs = 0, gotWave = false;
-const STRIP_SECONDS = 6;    // 可见窗口秒数
-const STRIP_BUFSEC = 30;    // 缓冲上限秒数
-const STRIP_MAXLAG = 8;     // 落后实时超过这么多秒就追上（防回放比实时快时越拖越远）
+// ── 波形双模式：12 导联快照 / 12 导联滚动（门控推流，按实时平滑卷动）──────────────
+let waveMode = "snapshot";                          // "snapshot" | "scroll"
+let leadBufs = Array.from({length:12}, ()=>[]);     // 每导滚动缓冲（== LEAD_NAMES 序）
+let leadFs = 125, drawHead = 0, lastTs = 0, gotWave = false;
+const STRIP_SECONDS = 5, STRIP_BUFSEC = 30, STRIP_MAXLAG = 8;
 
-function pushStrip(arr, fs){
-  if(fs) stripFs = fs;
-  for(let i=0;i<arr.length;i++) stripBuf.push(arr[i]);
+function pushStrip(wave2d, fs){                      // wave2d: 12 × n（lead-major）
+  if(fs) leadFs = fs;
+  for(let j=0;j<12;j++){ const b=leadBufs[j], w=wave2d[j]||[]; for(let k=0;k<w.length;k++) b.push(w[k]); }
   gotWave = true;
-  const cap = STRIP_BUFSEC*stripFs;
-  if(stripBuf.length > cap){
-    const drop = stripBuf.length - cap;
-    stripBuf.splice(0, drop);
-    drawHead = Math.max(0, drawHead - drop);
-  }
+  const cap = STRIP_BUFSEC*leadFs, len = leadBufs[0].length;
+  if(len > cap){ const drop=len-cap; for(let j=0;j<12;j++) leadBufs[j].splice(0,drop); drawHead=Math.max(0,drawHead-drop); }
 }
-function stripLoop(ts){
+function setMode(m){
+  waveMode = m;
+  $("#liveTag").hidden = (m!=="scroll");
+  $("#modeBtn").textContent = (m==="scroll") ? "切换到快照 ❚❚" : "切换到滚动 ▶";
+  if(m==="snapshot" && lastWf) drawECG(lastWf);     // 静态重绘一次；滚动由 rAF 负责
+}
+function waveLoop(ts){
   if(!lastTs) lastTs = ts;
-  let dt = (ts - lastTs)/1000; lastTs = ts;
-  if(dt > 0.25) dt = 0.25;                                   // 切后台回来别跳一大段
-  drawHead = Math.min(stripBuf.length, drawHead + stripFs*dt);
-  drawHead = Math.max(drawHead, stripBuf.length - STRIP_MAXLAG*stripFs);  // 不落后实时太多
-  drawStrip();
-  requestAnimationFrame(stripLoop);
+  let dt=(ts-lastTs)/1000; lastTs=ts; if(dt>0.25) dt=0.25;     // 切后台回来别跳一大段
+  const len = leadBufs[0].length;
+  drawHead = Math.min(len, drawHead + leadFs*dt);
+  drawHead = Math.max(drawHead, len - STRIP_MAXLAG*leadFs);    // 不落后实时太多
+  if(waveMode==="scroll") drawScroll12();
+  requestAnimationFrame(waveLoop);
 }
-function drawStrip(){
-  const cv = $("#strip"); if(!cv) return;
-  const dpr = window.devicePixelRatio||1, cssW = $("#stripWrap").clientWidth, cssH = 110;
-  if(cv.width !== Math.round(cssW*dpr)){ cv.width=cssW*dpr; cv.height=cssH*dpr; cv.style.height=cssH+"px"; }
-  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
+// 滚动 12 导：与快照同样的 6×2 布局，每格右对齐向左卷动
+function drawScroll12(){
+  const cv=$("#ecg"), dpr=window.devicePixelRatio||1, cssW=$("#ecgWrap").clientWidth;
+  const rows=ECG_LAYOUT.length, cols=2, band=78, labelW=34, padX=6, colW=cssW/cols, cssH=band*rows;
+  if(cv.width!==Math.round(cssW*dpr)){ cv.width=cssW*dpr; cv.height=cssH*dpr; cv.style.height=cssH+"px"; }
+  const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
   g.fillStyle="#10070c"; g.fillRect(0,0,cssW,cssH);
   g.lineWidth=1; g.strokeStyle="rgba(220,80,120,0.12)";
-  for(let x=0;x<=cssW;x+=10){g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke();}
-  for(let y=0;y<=cssH;y+=10){g.beginPath();g.moveTo(0,y);g.lineTo(cssW,y);g.stroke();}
+  for(let x=0;x<=cssW;x+=8){g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke();}
+  for(let y=0;y<=cssH;y+=8){g.beginPath();g.moveTo(0,y);g.lineTo(cssW,y);g.stroke();}
+  g.strokeStyle="rgba(220,80,120,0.28)";
+  for(let x=0;x<=cssW;x+=40){g.beginPath();g.moveTo(x,0);g.lineTo(x,cssH);g.stroke();}
+  for(let y=0;y<=cssH;y+=40){g.beginPath();g.moveTo(0,y);g.lineTo(cssW,y);g.stroke();}
+  g.strokeStyle="rgba(120,140,160,0.35)"; g.beginPath();g.moveTo(colW,0);g.lineTo(colW,cssH);g.stroke();
   if(!gotWave){ g.fillStyle="#9aa7b4"; g.font="13px system-ui"; g.fillText("等待门控波形…", 12, cssH/2); return; }
-  const need = Math.round(STRIP_SECONDS*stripFs);
-  const end = Math.floor(drawHead), start = Math.max(0, end-need);
-  const seg = stripBuf.slice(start, end);
-  if(seg.length < 2) return;
-  let maxAbs=0.4; for(const v of seg) if(Math.abs(v)>maxAbs) maxAbs=Math.abs(v);
-  const gain=(cssH*0.40)/maxAbs, baseY=cssH/2, dx=cssW/Math.max(1,need-1), off=need-seg.length;
-  g.strokeStyle="#7ee787"; g.lineWidth=1.4; g.beginPath();
-  for(let k=0;k<seg.length;k++){ const x=(off+k)*dx, y=baseY-seg[k]*gain; k?g.lineTo(x,y):g.moveTo(x,y); }
-  g.stroke();
+  const need=Math.round(STRIP_SECONDS*leadFs), end=Math.floor(drawHead), start=Math.max(0,end-need);
+  let maxAbs=0.3;                                              // 全局增益（所有导联统一）
+  for(let j=0;j<12;j++){ const b=leadBufs[j]; for(let k=start;k<end;k++){ const v=b[k]; if(v!==undefined&&Math.abs(v)>maxAbs) maxAbs=Math.abs(v); } }
+  const gain=(band*0.40)/maxAbs, idxOf={}; LEAD_NAMES.forEach((nm,ix)=>idxOf[nm]=ix);
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const name=ECG_LAYOUT[r][c], b=leadBufs[idxOf[name]];
+    const x0=c*colW+labelW, plotW=colW-labelW-padX, baseY=r*band+band/2;
+    g.fillStyle="#cfe9d6"; g.font="12px system-ui"; g.fillText(name, c*colW+5, r*band+14);
+    g.strokeStyle="rgba(120,140,160,0.22)"; g.beginPath();g.moveTo(x0,baseY);g.lineTo(c*colW+colW-padX,baseY);g.stroke();
+    const seg=b.slice(start,end); if(seg.length<2) continue;
+    const dx=plotW/Math.max(1,need-1), off=need-seg.length;
+    g.strokeStyle="#7ee787"; g.lineWidth=1.2; g.beginPath();
+    for(let k=0;k<seg.length;k++){ const x=x0+(off+k)*dx, y=baseY-seg[k]*gain; k?g.lineTo(x,y):g.moveTo(x,y); }
+    g.stroke();
+  }
 }
 
 // ── 波形绘制（ECG 纸网格 + 12 导联小多图）────────────────────────────────────
 // 6 行 × 2 列布局（用户指定，便于对照查看）
 const ECG_LAYOUT = [["II","I"],["aVR","III"],["aVF","aVL"],["V2","V1"],["V4","V3"],["V6","V5"]];
+// 门控推流里 12 导的顺序（== feats 行序 / lepod2mat 重建序）
+const LEAD_NAMES = ["I","II","III","aVR","aVL","aVF","V1","V2","V3","V4","V5","V6"];
 
 function drawECG(wf){
   const cv = $("#ecg"); if(!wf || !wf.leads || !wf.leads.length){ return; }
