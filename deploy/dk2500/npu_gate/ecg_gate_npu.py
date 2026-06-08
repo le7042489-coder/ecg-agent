@@ -115,10 +115,12 @@ def make_on_wake(args, seg_for):
     return on_wake
 
 
-def make_notify(args, seg_for, thr):
+def make_notify(args, seg_for, thr, wave_for=None, wfs=125.0):
     """Return on_step(i,t,window,name,decision): push live gate status to an always-on web UI, and
     on a wake POST the abnormal window (saved as a .mat) so the page alerts + switches to it.
-    Best-effort: a short timeout + swallowed errors so a down/slow server never stalls the gate."""
+    If `wave_for(i)` is given, each status also carries the newest lead-II samples so the page can
+    scroll a live rhythm strip (monitor-style). Best-effort: short timeout + swallowed errors so a
+    down/slow server never stalls the gate."""
     import urllib.request
     base = args.notify_url.rstrip("/")
 
@@ -131,9 +133,14 @@ def make_notify(args, seg_for, thr):
             pass  # server may be down; live status is non-critical
 
     def on_step(i, t, window, name, d):
-        post({"type": "status", "state": d["state"], "score": round(d["score"], 4),
-              "smoothed": round(d["smoothed"], 4), "thr": round(thr, 4), "t": round(t, 1),
-              "abn": bool(d["abn"]), "count": int(d["count"]), "n": int(d["n"])})
+        status = {"type": "status", "state": d["state"], "score": round(d["score"], 4),
+                  "smoothed": round(d["smoothed"], 4), "thr": round(thr, 4), "t": round(t, 1),
+                  "abn": bool(d["abn"]), "count": int(d["count"]), "n": int(d["n"])}
+        if wave_for is not None:
+            status["wave"] = [round(float(v), 3) for v in wave_for(i)]  # newest lead-II chunk
+            status["wfs"] = round(float(wfs), 2)
+            status["lead"] = "II"
+        post(status)
         if d["wake"]:
             mat = _save_wake_mat(seg_for(i), os.path.expanduser(args.wake_dir), t)
             post({"type": "wake", "mat": mat, "score": round(d["score"], 4),
@@ -243,7 +250,10 @@ def main():
         # hand the Agent the RAW mV slice of the abnormal window (not the [-1,1]-normalized one)
         seg_for = lambda i: raw[starts[i]:starts[i] + WIN]
         on_wake = make_on_wake(args, seg_for) if wake_on else None
-        on_step = make_notify(args, seg_for, thr) if args.notify_url else None
+        # live rhythm strip: newest hop-worth of lead II (raw mV), downsampled to ~125Hz
+        ds = max(1, round(FS / 125)); hop_samps = int(args.hop * FS)
+        wave_for = lambda i: seg_for(i)[max(0, WIN - hop_samps):WIN:ds, 1]
+        on_step = make_notify(args, seg_for, thr, wave_for, FS / ds) if args.notify_url else None
         print(f"sliding {len(windows)} windows (hop={args.hop}s) over {args.mat}; m-of-n={m}/{n}"
               + (f"; wake={args.wake}" if wake_on else "") + (f"; notify={args.notify_url}" if args.notify_url else ""))
         rg.run_stream(windows, times, score_fn, gate, names=names, wake_cmd=args.wake_cmd,
@@ -255,7 +265,9 @@ def main():
         times = [i * (WIN / FS) for i in range(len(windows))]
         seg_for = lambda i: windows[i]
         on_wake = make_on_wake(args, seg_for) if wake_on else None
-        on_step = make_notify(args, seg_for, thr) if args.notify_url else None
+        ds = max(1, round(FS / 125))
+        wave_for = lambda i: windows[i][::ds, 1]
+        on_step = make_notify(args, seg_for, thr, wave_for, FS / ds) if args.notify_url else None
         print(f"replay {len(windows)} windows; m-of-n={m}/{n} smooth={args.smooth} refractory={args.refractory}s")
         rg.run_stream(windows, times, score_fn, gate, labels=lab, wake_cmd=args.wake_cmd,
                       on_wake=on_wake, on_step=on_step, pace=args.pace)

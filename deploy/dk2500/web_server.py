@@ -195,8 +195,8 @@ class Handler(BaseHTTPRequestHandler):
                     srv.broadcast({"type": "gate_error", "msg": f"切换异常窗失败: {e}"})
             else:
                 srv.broadcast({"type": "gate_error", "msg": f"异常窗 .mat 不存在: {mat}"})
-        else:  # status（及其它）
-            srv.gate_state = ev
+        else:  # status（及其它）：广播完整事件（含 wave 波形片段），但 gate_state 不存 wave（省内存）
+            srv.gate_state = {k: v for k, v in ev.items() if k != "wave"}
             srv.broadcast(ev)
         self._send_json({"ok": True})
 
