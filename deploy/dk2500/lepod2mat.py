@@ -115,11 +115,16 @@ def trim_or_pad(signal_12ch: np.ndarray, target_len: int = TARGET_SAMPLES) -> np
     return np.concatenate([signal_12ch, pad], axis=1)
 
 
-def convert(csv_path: str, output_path: str = None, src_rate: int = 250) -> str:
-    """主转换函数。返回输出 .mat 路径。"""
+def convert(csv_path: str, output_path: str = None, src_rate: int = 250,
+            full: bool = False) -> str:
+    """主转换函数。返回输出 .mat 路径。
+
+    默认裁/补到 10s（5000 采样）给单窗诊断用；full=True 保留**整段连续**信号（feats (12, N)），
+    供 NPU 门控滑窗（npu_gate/ecg_gate_npu.py --mat）跑完整录制。两种都写同样的 schema
+    （feats + curr_sample_rate），下游工具/门控通用。"""
     if output_path is None:
         base = os.path.splitext(csv_path)[0]
-        output_path = base + ".mat"
+        output_path = base + (".mat" if not full else "_full.mat")
 
     print(f"[lepod2mat] 读取: {csv_path}")
     signal_8ch, cols = load_lepod_csv(csv_path)
@@ -131,11 +136,15 @@ def convert(csv_path: str, output_path: str = None, src_rate: int = 250) -> str:
     signal_500 = resample_to_500hz(signal_12ch, src_rate)
     print(f"  上采样到 {TARGET_SAMPLE_RATE}Hz: {signal_500.shape}")
 
-    signal_final = trim_or_pad(signal_500, TARGET_SAMPLES)
-    print(f"  截断/填充到 {TARGET_SAMPLES} 个采样点: {signal_final.shape}")
+    if full:
+        signal_final = signal_500
+        print(f"  保留整段（--full）: {signal_final.shape} = {signal_final.shape[1]/TARGET_SAMPLE_RATE:.1f}s")
+    else:
+        signal_final = trim_or_pad(signal_500, TARGET_SAMPLES)
+        print(f"  截断/填充到 {TARGET_SAMPLES} 个采样点: {signal_final.shape}")
 
     mat_data = {
-        "feats": signal_final,            # (12, 5000) float32，mV
+        "feats": signal_final,            # (12, N) float32，mV（默认 N=5000；--full 为整段）
         "curr_sample_rate": np.array([[TARGET_SAMPLE_RATE]]),
     }
     scipy.io.savemat(output_path, mat_data)
@@ -148,9 +157,11 @@ def main():
     parser.add_argument("csv", help="输入 CSV 文件路径（lepod_ecg.py 输出）")
     parser.add_argument("-o", "--output", default=None, help="输出 .mat 路径（默认同名）")
     parser.add_argument("--rate", type=int, default=250, help="Lepod 采样率（默认 250Hz）")
+    parser.add_argument("--full", action="store_true",
+                        help="保留整段连续信号（不截断到 10s），供门控滑窗跑完整录制")
     args = parser.parse_args()
 
-    out = convert(args.csv, args.output, args.rate)
+    out = convert(args.csv, args.output, args.rate, full=args.full)
     print(f"完成: {out}")
 
 

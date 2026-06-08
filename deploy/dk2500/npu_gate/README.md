@@ -76,8 +76,11 @@ conda activate ecg-bedside
 # 1) 用目标域正常样本校准阈值（建议 Lepod 正常录制；on-device、跑 NPU）
 python ecg_gate_npu.py --onnx tsrnet_spec.onnx --calibrate lepod_normals.npy --thr-out gate_thr_lepod.json
 
+# 1b) 把一整段 Lepod 录制（CSV）转成连续 .mat（不截断到 10s），供门控滑全程
+python ../lepod2mat.py ecg_XXXX.csv --full -o ecg_full.mat
+
 # 2) 对真 Lepod .mat 滑窗常驻，检出持续异常自动唤醒网页 Agent
-python ecg_gate_npu.py --onnx tsrnet_spec.onnx --thr gate_thr_lepod.json --mat ecg.mat \
+python ecg_gate_npu.py --onnx tsrnet_spec.onnx --thr gate_thr_lepod.json --mat ecg_full.mat \
     --hop 2.5 --m 3 --n 5 --refractory 30 --wake web
 
 # 回放/验证带标签集（m=n=2 == 旧「2 连续」去抖）
