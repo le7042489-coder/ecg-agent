@@ -24,6 +24,7 @@ overlap keeps real episodes caught quickly. See memory project-npu-gate-tsrnet.
 """
 from collections import deque
 import subprocess
+import time
 import numpy as np
 
 WIN = 5000  # 10 s @ 500 Hz — the scorer's fixed input length
@@ -104,7 +105,7 @@ class RollingGate:
 
 
 def run_stream(windows, times, score_fn, gate, labels=None, names=None, wake_cmd=None,
-               on_wake=None, on_step=None, verbose=True):
+               on_wake=None, on_step=None, pace=0.0, verbose=True):
     """Drive (start, t, window) items through score_fn + gate. `windows`/`times` are parallel lists
     (or an iterable of (t, window)); score_fn(window5000)->float. Returns the np.array of scores.
 
@@ -139,6 +140,8 @@ def run_stream(windows, times, score_fn, gate, labels=None, names=None, wake_cmd
                 cmd = wake_cmd.replace("{mat}", name or "")
                 print("    run:", cmd)
                 subprocess.Popen(cmd, shell=True)
+        if pace > 0:
+            time.sleep(pace)  # replay pacing: space out windows so a monitor can be watched live
     scores = np.asarray(scores)
     if labels is not None and verbose:
         labels = np.asarray(labels)

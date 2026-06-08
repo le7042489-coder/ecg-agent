@@ -187,6 +187,8 @@ def main():
     # rolling window: --hop seconds between re-scores (overlap), M-of-N persistence, median smoothing,
     # refractory seconds between wakes. --debounce d is back-compat sugar for --m d --n d.
     ap.add_argument("--hop", type=float, default=2.5, help="seconds between sliding re-scores (--mat)")
+    ap.add_argument("--pace", type=float, default=0.0,
+                    help="sleep this many seconds between windows (replay pacing for a live demo; 0=fast)")
     ap.add_argument("--m", type=int); ap.add_argument("--n", type=int)
     ap.add_argument("--smooth", type=int, default=1, help="rolling-median window over raw scores")
     ap.add_argument("--refractory", type=float, default=30.0, help="seconds suppressed after a wake")
@@ -245,7 +247,7 @@ def main():
         print(f"sliding {len(windows)} windows (hop={args.hop}s) over {args.mat}; m-of-n={m}/{n}"
               + (f"; wake={args.wake}" if wake_on else "") + (f"; notify={args.notify_url}" if args.notify_url else ""))
         rg.run_stream(windows, times, score_fn, gate, names=names, wake_cmd=args.wake_cmd,
-                      on_wake=on_wake, on_step=on_step)
+                      on_wake=on_wake, on_step=on_step, pace=args.pace)
     else:
         # pre-cut disjoint windows: time-stamp them one window-length (10s) apart
         windows = list(np.load(args.npy))
@@ -256,7 +258,7 @@ def main():
         on_step = make_notify(args, seg_for, thr) if args.notify_url else None
         print(f"replay {len(windows)} windows; m-of-n={m}/{n} smooth={args.smooth} refractory={args.refractory}s")
         rg.run_stream(windows, times, score_fn, gate, labels=lab, wake_cmd=args.wake_cmd,
-                      on_wake=on_wake, on_step=on_step)
+                      on_wake=on_wake, on_step=on_step, pace=args.pace)
 
 
 if __name__ == "__main__":
