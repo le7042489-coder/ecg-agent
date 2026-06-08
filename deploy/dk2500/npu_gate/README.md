@@ -37,7 +37,22 @@ ECG 窗打异常分，**滚动窗口**做持久判据，检出持续异常时自
 ## 唤醒接线
 
 检出持续异常时，门控把**触发的那个 10s 窗**写成 `lepod2mat.py` 兼容的 `.mat`（`feats (12,5000)` mV +
-`curr_sample_rate`，分类工具两者都要），再在该窗上启动真 Agent：
+`curr_sample_rate`，分类工具两者都要）。两种把它交给 Agent 的方式：
+
+**A. 网页常开、门控推报警（推荐，`--notify-url`）**——`web_server.py` 常驻当床旁界面；门控每窗 POST
+实时态到 `/api/gate`（页面顶栏「门控 ● 监测中 score/阈」实时跳），检出异常时 POST 报警，服务端把
+agent **热切到异常窗**（重算工具缓存、不重载 LLM）并经 SSE 让页面弹报警横幅 + 波形/findings 自动切到
+该窗：
+
+```bash
+# 终端1：常驻网页（先起一个初始 .mat）
+python ../web_server.py --mat init.mat --backend llama-cpp --gguf $G --host 0.0.0.0 --port 8000
+# 终端2：门控滑窗 + 推送
+python ecg_gate_npu.py --onnx tsrnet_spec.onnx --thr gate_thr_lepod.json --mat ecg.mat \
+    --hop 2.5 --m 3 --n 5 --notify-url http://127.0.0.1:8000
+```
+
+**B. 平时无界面、异常时拉起一个新进程（`--wake`）**：
 
 - `--wake web` → `web_server.py`（网页界面）
 - `--wake cli` → `bedside_agent.py`（CLI）
@@ -46,6 +61,11 @@ ECG 窗打异常分，**滚动窗口**做持久判据，检出持续异常时自
 
 启动是**完全 detached**（独立会话 + 输出落日志），门控作为常驻 daemon 不被启动的 Agent 拖住。
 `--deploy-dir`/`--gguf`/`--host`/`--port` 覆盖启动细节。
+
+> 前端接入（A）改动：`web_server.py` 加 `POST /api/gate`（收门控事件）+ `GET /api/gate/stream`（SSE
+> 广播给浏览器）；`agent_core.py` 加 `load_mat()` 热切；`web/index.html` 加门控状态栏 + 报警横幅 + 自动
+> 刷新。设备 E2E 实测：91 条 status + 2 条 wake/ecg_ready，`/api/ecg` 热切到异常窗（分类/测量/波形齐全，
+> LLM 不重载）。plumbing 冒烟见 `../test_gate_web.py`。
 
 ## 用法
 

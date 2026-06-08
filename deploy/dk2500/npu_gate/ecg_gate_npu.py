@@ -115,6 +115,34 @@ def make_on_wake(args, seg_for):
     return on_wake
 
 
+def make_notify(args, seg_for, thr):
+    """Return on_step(i,t,window,name,decision): push live gate status to an always-on web UI, and
+    on a wake POST the abnormal window (saved as a .mat) so the page alerts + switches to it.
+    Best-effort: a short timeout + swallowed errors so a down/slow server never stalls the gate."""
+    import urllib.request
+    base = args.notify_url.rstrip("/")
+
+    def post(obj):
+        try:
+            req = urllib.request.Request(base + "/api/gate", data=json.dumps(obj).encode(),
+                                         headers={"Content-Type": "application/json"}, method="POST")
+            urllib.request.urlopen(req, timeout=1.5).read()
+        except Exception:
+            pass  # server may be down; live status is non-critical
+
+    def on_step(i, t, window, name, d):
+        post({"type": "status", "state": d["state"], "score": round(d["score"], 4),
+              "smoothed": round(d["smoothed"], 4), "thr": round(thr, 4), "t": round(t, 1),
+              "abn": bool(d["abn"]), "count": int(d["count"]), "n": int(d["n"])})
+        if d["wake"]:
+            mat = _save_wake_mat(seg_for(i), os.path.expanduser(args.wake_dir), t)
+            post({"type": "wake", "mat": mat, "score": round(d["score"], 4),
+                  "thr": round(thr, 4), "t": round(t, 1)})
+            print(f"    WAKE -> notified {base} (abnormal window {mat})")
+
+    return on_step
+
+
 def score(compiled, ecg5000, r_index):
     """Peak-based Error via NPU forward (full-spec). Higher = more anomalous."""
     t = ecg5000[100:4900, :].astype(np.float32)  # (4800,12)
@@ -163,6 +191,9 @@ def main():
     ap.add_argument("--smooth", type=int, default=1, help="rolling-median window over raw scores")
     ap.add_argument("--refractory", type=float, default=30.0, help="seconds suppressed after a wake")
     ap.add_argument("--debounce", type=int, default=1)
+    # notify an always-on web UI (web_server.py): push live status every window + alert on wake.
+    # Independent of --wake (which spawns a fresh process instead).
+    ap.add_argument("--notify-url", help="base URL of a running web_server.py, e.g. http://127.0.0.1:8000")
     # wake target: launch the real bedside Agent on the abnormal window's .mat
     ap.add_argument("--wake", choices=["none", "web", "cli"], default="none",
                     help="on abnormal: 'web'=web_server.py, 'cli'=bedside_agent.py, 'none'=just log")
@@ -208,18 +239,24 @@ def main():
         times, windows = [t for _, t, _ in triples], [w for _, _, w in triples]
         names = [args.mat] * len(windows)
         # hand the Agent the RAW mV slice of the abnormal window (not the [-1,1]-normalized one)
-        on_wake = make_on_wake(args, lambda i: raw[starts[i]:starts[i] + WIN]) if wake_on else None
+        seg_for = lambda i: raw[starts[i]:starts[i] + WIN]
+        on_wake = make_on_wake(args, seg_for) if wake_on else None
+        on_step = make_notify(args, seg_for, thr) if args.notify_url else None
         print(f"sliding {len(windows)} windows (hop={args.hop}s) over {args.mat}; m-of-n={m}/{n}"
-              + (f"; wake={args.wake}" if wake_on else ""))
-        rg.run_stream(windows, times, score_fn, gate, names=names, wake_cmd=args.wake_cmd, on_wake=on_wake)
+              + (f"; wake={args.wake}" if wake_on else "") + (f"; notify={args.notify_url}" if args.notify_url else ""))
+        rg.run_stream(windows, times, score_fn, gate, names=names, wake_cmd=args.wake_cmd,
+                      on_wake=on_wake, on_step=on_step)
     else:
         # pre-cut disjoint windows: time-stamp them one window-length (10s) apart
         windows = list(np.load(args.npy))
         lab = np.load(args.labels) if args.labels else None
         times = [i * (WIN / FS) for i in range(len(windows))]
-        on_wake = make_on_wake(args, lambda i: windows[i]) if wake_on else None
+        seg_for = lambda i: windows[i]
+        on_wake = make_on_wake(args, seg_for) if wake_on else None
+        on_step = make_notify(args, seg_for, thr) if args.notify_url else None
         print(f"replay {len(windows)} windows; m-of-n={m}/{n} smooth={args.smooth} refractory={args.refractory}s")
-        rg.run_stream(windows, times, score_fn, gate, labels=lab, wake_cmd=args.wake_cmd, on_wake=on_wake)
+        rg.run_stream(windows, times, score_fn, gate, labels=lab, wake_cmd=args.wake_cmd,
+                      on_wake=on_wake, on_step=on_step)
 
 
 if __name__ == "__main__":

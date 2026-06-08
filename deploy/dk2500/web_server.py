@@ -18,7 +18,9 @@
 import argparse
 import json
 import os
+import queue
 import sys
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -33,6 +35,29 @@ class AgentHTTPServer(ThreadingHTTPServer):
     def __init__(self, addr, handler, agent):
         super().__init__(addr, handler)
         self.agent = agent
+        # 门控 → 前端 的发布/订阅：NPU 门控 POST /api/gate 推状态/报警，前端 SSE 订阅 /api/gate/stream
+        self._subs = set()                                   # set[queue.Queue]
+        self._subs_lock = threading.Lock()
+        self.gate_state = {"type": "status", "state": "idle"}  # 最近一次门控态（新连进来先发）
+
+    def subscribe(self):
+        q = queue.Queue(maxsize=200)
+        with self._subs_lock:
+            self._subs.add(q)
+        return q
+
+    def unsubscribe(self, q):
+        with self._subs_lock:
+            self._subs.discard(q)
+
+    def broadcast(self, ev):
+        with self._subs_lock:
+            subs = list(self._subs)
+        for q in subs:
+            try:
+                q.put_nowait(ev)
+            except queue.Full:
+                pass
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -71,6 +96,8 @@ class Handler(BaseHTTPRequestHandler):
         elif route == "/api/ask":
             q = (parse_qs(parsed.query).get("q") or [""])[0].strip()
             self._serve_ask(q)
+        elif route == "/api/gate/stream":
+            self._serve_gate_stream()
         elif route == "/favicon.ico":
             self.send_response(204)
             self.end_headers()
@@ -79,6 +106,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         route = urlparse(self.path).path
+        if route == "/api/gate":
+            self._handle_gate_post()
+            return
         # 语音占位：实现前先明确告知未启用，前端据此优雅降级
         if route == "/api/stt":
             self._send_json({"error": "STT 未启用", "hint": "后期接服务端语音识别（如 whisper.cpp）；"
@@ -137,6 +167,60 @@ class Handler(BaseHTTPRequestHandler):
                 pass
         finally:
             gen.close()  # 触发 ask_stream 内 with-lock 释放
+
+    # ── 门控接入：常驻网页 + NPU 门控推报警 ───────────────────────────────────
+
+    def _handle_gate_post(self):
+        """NPU 门控（ecg_gate_npu.py --notify-url）推来的事件：
+        type=status → 更新「监测中」实时态并广播；
+        type=wake   → 先广播报警（不等重算）→ 把 agent 热切到异常窗 .mat → 广播 ecg_ready 让前端刷新。"""
+        length = int(self.headers.get("Content-Length", 0) or 0)
+        try:
+            ev = json.loads(self.rfile.read(length) or b"{}")
+        except Exception:
+            self._send_json({"error": "bad json"}, code=400)
+            return
+        srv = self.server
+        if ev.get("type") == "wake":
+            srv.gate_state = {"type": "status", "state": "alarm",
+                              "score": ev.get("score"), "thr": ev.get("thr"), "t": ev.get("t")}
+            srv.broadcast(ev)                       # 立刻弹报警横幅，不等重算
+            mat = ev.get("mat")
+            if mat and os.path.exists(mat):
+                try:
+                    srv.agent.load_mat(mat)         # 重算工具缓存（不重载 LLM）
+                    srv.broadcast({"type": "ecg_ready", "t": ev.get("t"),
+                                   "ecg_file": os.path.basename(mat)})
+                except Exception as e:
+                    srv.broadcast({"type": "gate_error", "msg": f"切换异常窗失败: {e}"})
+            else:
+                srv.broadcast({"type": "gate_error", "msg": f"异常窗 .mat 不存在: {mat}"})
+        else:  # status（及其它）
+            srv.gate_state = ev
+            srv.broadcast(ev)
+        self._send_json({"ok": True})
+
+    def _serve_gate_stream(self):
+        """前端 EventSource 订阅：门控实时态 + 报警 + ecg_ready。每客户端一个队列，15s 无事件发 ping。"""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Accel-Buffering", "no")
+        self.end_headers()
+        srv = self.server
+        q = srv.subscribe()
+        try:
+            self._sse(srv.gate_state or {"type": "status", "state": "idle"})  # 新连先发当前态
+            while True:
+                try:
+                    self._sse(q.get(timeout=15))
+                except queue.Empty:
+                    self.wfile.write(b": ping\n\n")  # keepalive
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        finally:
+            srv.unsubscribe(q)
 
     def _sse(self, obj):
         payload = json.dumps(obj, ensure_ascii=False)

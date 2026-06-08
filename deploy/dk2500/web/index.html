@@ -55,6 +55,14 @@
   .opts{display:flex;align-items:center;gap:14px;padding:6px 12px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted)}
   .opts label{display:flex;align-items:center;gap:5px;cursor:pointer}
   .disclaimer{font-size:11px;color:var(--warn)}
+  /* 门控状态（NPU 异常门控 → 常驻网页）*/
+  header .gate{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  header .gate .gdot{width:8px;height:8px;border-radius:50%;background:#6e7681;transition:background .2s}
+  header .gate .gdot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent)}
+  header .gate .gdot.alarm{background:var(--bad);box-shadow:0 0 6px var(--bad)}
+  .alertbar{padding:9px 16px;background:#5a1d1d;color:#ffd9d6;border-bottom:1px solid var(--bad);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;animation:flash .5s}
+  .alertbar[hidden]{display:none}
+  @keyframes flash{from{background:#7d2826}to{background:#5a1d1d}}
 </style>
 </head>
 <body>
@@ -62,7 +70,11 @@
   <span class="dot" id="statusDot"></span>
   <h1>ECG-Agent · 床旁</h1>
   <span class="file" id="ecgFile">加载中…</span>
+  <span class="gate" id="gateStatus" title="NPU 异常门控（滚动窗口监测）">
+    <span class="gdot" id="gdot"></span><span id="gateText">门控连接中…</span>
+  </span>
 </header>
+<div class="alertbar" id="alertBar" hidden></div>
 <main>
   <section class="left">
     <div class="pane-title">12 导联波形</div>
@@ -89,19 +101,45 @@
 const $ = (s)=>document.querySelector(s);
 let busy = false;
 
-// ── 初始化：拉波形 + findings ────────────────────────────────────────────────
-async function init(){
-  try{
-    const r = await fetch("/api/ecg");
-    const d = await r.json();
-    if(d.error){ $("#ecgFile").textContent = d.error; return; }
-    $("#ecgFile").textContent = d.ecg_file || "";
-    $("#statusDot").classList.add("ok");
-    drawECG(d.waveform);
-    renderFindings(d.summary);
-    window.addEventListener("resize", ()=>drawECG(d.waveform));
-  }catch(e){ $("#ecgFile").textContent = "加载失败: "+e; }
+// ── 初始化：拉波形 + findings + 订阅门控 ──────────────────────────────────────
+let lastWf = null;
+async function loadEcg(){
+  const r = await fetch("/api/ecg");
+  const d = await r.json();
+  if(d.error){ $("#ecgFile").textContent = d.error; return; }
+  $("#ecgFile").textContent = d.ecg_file || "";
+  $("#statusDot").classList.add("ok");
+  lastWf = d.waveform;
+  drawECG(d.waveform);
+  renderFindings(d.summary);
 }
+function init(){
+  loadEcg().catch(e=>{ $("#ecgFile").textContent = "加载失败: "+e; });
+  window.addEventListener("resize", ()=>{ if(lastWf) drawECG(lastWf); });
+  connectGate();
+}
+
+// ── 门控：常驻订阅 /api/gate/stream，实时态 + 异常报警 + 自动切到异常窗 ─────────
+function connectGate(){
+  const es = new EventSource("/api/gate/stream");
+  es.onmessage = (e)=>{
+    let d; try{ d=JSON.parse(e.data); }catch(_){ return; }
+    if(d.type==="status"){ updateGate(d); }
+    else if(d.type==="wake"){ showAlert(`⚠ 检测到异常（score ${fmt(d.score)}，t=${d.t}s），正在调取该窗…`); }
+    else if(d.type==="ecg_ready"){ loadEcg(); showAlert(`⚠ 已切到异常窗（t=${d.t}s ${d.ecg_file||""}）— 下方波形/分析已更新，可就此提问`); }
+    else if(d.type==="gate_error"){ $("#gateText").textContent = "门控: "+(d.msg||"错误"); }
+  };
+  es.onerror = ()=>{ const g=$("#gdot"); g.className="gdot"; $("#gateText").textContent="门控重连中…"; };
+}
+function updateGate(d){
+  const g=$("#gdot"), t=$("#gateText");
+  if(d.state==="idle"){ g.className="gdot"; t.textContent="门控待机（无数据）"; return; }
+  const alarm = d.state==="alarm" || d.state==="refractory" || d.abn;
+  g.className = "gdot " + (alarm ? "alarm" : "ok");
+  t.textContent = `门控${alarm?"⚠":"●"} 监测中  ${fmt(d.score)} / 阈 ${fmt(d.thr)}`;
+}
+function showAlert(text){ const bar=$("#alertBar"); bar.hidden=false; bar.textContent=text; }
+function fmt(v){ return (v===undefined||v===null)?"—":(typeof v==="number"?v.toFixed(3):v); }
 
 // ── 波形绘制（ECG 纸网格 + 12 导联小多图）────────────────────────────────────
 // 6 行 × 2 列布局（用户指定，便于对照查看）

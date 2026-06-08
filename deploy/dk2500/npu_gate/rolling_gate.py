@@ -104,10 +104,12 @@ class RollingGate:
 
 
 def run_stream(windows, times, score_fn, gate, labels=None, names=None, wake_cmd=None,
-               on_wake=None, verbose=True):
+               on_wake=None, on_step=None, verbose=True):
     """Drive (start, t, window) items through score_fn + gate. `windows`/`times` are parallel lists
     (or an iterable of (t, window)); score_fn(window5000)->float. Returns the np.array of scores.
 
+    `on_step(i, t, window, name, decision)` (if given) is called for EVERY window with the gate's
+    decision dict -- used to push live gate status to a monitor (e.g. the always-on web UI).
     On a wake event: if `on_wake` is given it is called as on_wake(i, t, window, name) (the caller
     decides what to launch -- e.g. dump the abnormal window to a .mat and start the bedside Agent);
     otherwise, if `wake_cmd` is given, it is run with {mat} substituted by names[i]. For labelled
@@ -126,9 +128,11 @@ def run_stream(windows, times, score_fn, gate, labels=None, names=None, wake_cmd
                 print(f"{head} >>> WAKE")
             else:
                 print(f"{head} {d['state']}")
+        name = names[i] if names else None
+        if on_step is not None:
+            on_step(i, t, w, name, d)
         if d["wake"]:
             woke += 1
-            name = names[i] if names else None
             if on_wake is not None:
                 on_wake(i, t, w, name)
             elif wake_cmd:

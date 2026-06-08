@@ -67,20 +67,7 @@ class BedsideAgent:
 
         # 2. 预算工具输出（缓存），并打印一遍便于 CLI 启动时/服务端日志查看
         print("[core] 预计算工具输出...")
-        self.cached_classification = B.run_classification(self.classifier, mat_path)
-        print(f"  分类: {self.cached_classification}")
-        self.cached_measurement = B.run_measurement(self.analyzer, mat_path)
-        print(f"  测量: {self.cached_measurement}")
-        self.cached_morphology = B.run_morphology(self.morphology, mat_path)
-        print(f"  形态学: {self.cached_morphology}")
-        self.cached_signal_quality = B.run_signal_quality(self.signal_quality, mat_path)
-        print(f"  信号质量: {self.cached_signal_quality}")
-        self.cached_guideline = (
-            B.guideline_context(self._gretr, self.cached_classification)
-            if self._gretr is not None else ""
-        )
-        if self.cached_guideline:
-            print(f"  指南: {self.cached_guideline}")
+        self._budget(mat_path)
 
         # 3. LLM + 后端 token 迭代器（**kw 透传 max_tokens / stop）
         print("[core] 加载 LLM...")
@@ -108,6 +95,35 @@ class BedsideAgent:
 
         # 4. 对话历史
         self.messages = [{"role": "system", "content": B.SYSTEM_PROMPT}]
+
+    # ── 数据源预算 / 热切 ─────────────────────────────────────────────────────
+
+    def _budget(self, mat_path):
+        """（重新）预算 4 个工具输出 + 可选指南，缓存给 summary()/gen-2。用已加载的工具，不碰 LLM。
+        __init__ 与 load_mat 共用。"""
+        self.mat_path = mat_path
+        self.cached_classification = B.run_classification(self.classifier, mat_path)
+        print(f"  分类: {self.cached_classification}")
+        self.cached_measurement = B.run_measurement(self.analyzer, mat_path)
+        print(f"  测量: {self.cached_measurement}")
+        self.cached_morphology = B.run_morphology(self.morphology, mat_path)
+        print(f"  形态学: {self.cached_morphology}")
+        self.cached_signal_quality = B.run_signal_quality(self.signal_quality, mat_path)
+        print(f"  信号质量: {self.cached_signal_quality}")
+        self.cached_guideline = (B.guideline_context(self._gretr, self.cached_classification)
+                                 if self._gretr is not None else "")
+        if self.cached_guideline:
+            print(f"  指南: {self.cached_guideline}")
+
+    def load_mat(self, mat_path):
+        """热切到新 .mat（如门控唤醒的异常窗）：重算工具缓存、重置对话历史；保留已载 LLM/工具。
+        线程安全：与 ask_stream 共用 _lock 串行化（生成中则等其结束）。"""
+        with self._lock:
+            print(f"[core] 切换 ECG → {mat_path}")
+            self._budget(mat_path)
+            self.messages = [{"role": "system", "content": B.SYSTEM_PROMPT}]
+            self.last_action = ""
+            self.last_content = ""
 
     # ── 给 UI 的只读数据 ──────────────────────────────────────────────────────
 
